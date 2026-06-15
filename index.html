@@ -514,7 +514,15 @@ function parseFieldGroups(inst) {
       if (!Array.isArray(row)) continue;
       for (const fld of row) {
         if (!fld || !fld.field_name) continue;
-        const v = fld.value;
+        let v = fld.value;
+        // Linked entity: {instance_id, text} → extract text
+        if (v && typeof v === 'object' && !Array.isArray(v) && v.text !== undefined) {
+          v = v.text;
+        }
+        // Array of linked entities → join texts
+        if (Array.isArray(v) && v.length > 0 && v[0]?.text !== undefined) {
+          v = v.map(x => x.text).join(', ');
+        }
         if (v !== undefined && v !== null && v !== '') {
           f[fld.field_name.trim()] = v;
           if (fld.field_data_name) f[fld.field_data_name.trim()] = v;
@@ -526,13 +534,21 @@ function parseFieldGroups(inst) {
 }
 
 function mapFields(f) {
+  // Build name: prefer first+last, fall back to שם מלא minus title prefix
+  const first = pick(f, 'שם פרטי');
+  const last  = pick(f, 'שם משפחה');
+  const full  = pick(f, 'שם מלא', 'שם', 'שם הליד', 'שם ושם משפחה');
+  const name  = (first || last)
+    ? [first, last].filter(Boolean).join(' ')
+    : full.replace(/^(גב'|מר|הרב|ד"ר)\s*/u, '').trim();
+
   return {
-    name:        pick(f, 'שם','שם מלא','שם פרטי','שם ושם משפחה','שם הליד','name'),
-    phone:       pick(f, 'טלפון','נייד','פלאפון','מספר טלפון','phone'),
+    name,
+    phone:       pick(f, 'נייד','טלפון','טלפון בית','פלאפון','מספר טלפון','phone'),
     city:        pick(f, 'עיר','שם העיר','יישוב','city'),
-    source:      pick(f, 'מקור הגעה','מקור','ספירה של מקור הליד','מקור ליד','source'),
+    source:      pick(f, 'מקור הליד','מקור הגעה','מקור','מקור ליד','source'),
     responsible: pick(f, 'אחראי מטפל','אחראי','נציג','נציג אחראי','משתמש אחראי','responsible'),
-    status:      pick(f, 'סטטוס ליד','סטטוס','סטטוס של מקור הליד','מצב','מצב ליד','שלב','status'),
+    status:      pick(f, 'סטטוס ליד','סטטוס','מצב','מצב ליד','שלב','status'),
   };
 }
 
