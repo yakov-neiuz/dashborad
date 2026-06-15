@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>דשבורד לידים | אוריגמי</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #6366f1;
+      --primary-light: #e0e7ff;
+      --green: #22c55e; --green-bg: #dcfce7;
+      --red: #ef4444;   --red-bg: #fee2e2;
+      --blue: #3b82f6;  --blue-bg: #dbeafe;
+      --amber: #f59e0b; --amber-bg: #fef3c7;
+      --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+      --gray-400: #9ca3af; --gray-600: #4b5563; --gray-800: #1f2937;
+      --radius: 12px; --shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; }
+
+    /* HEADER */
+    header { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+    header h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    header h1 span { font-size: 1.3rem; }
+    #last-updated { font-size: .75rem; color: var(--gray-400); }
+
+    /* MAIN LAYOUT */
+    main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    /* FILTER BAR */
+    .filter-bar { background: #fff; border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+    .filter-group label { font-size: .75rem; font-weight: 600; color: var(--gray-600); }
+    .filter-group select, .filter-group input[type=date] { border: 1px solid var(--gray-200); border-radius: 8px; padding: 7px 10px; font-size: .85rem; color: var(--gray-800); background: var(--gray-50); outline: none; transition: border-color .15s; width: 100%; }
+    .filter-group select:focus, .filter-group input:focus { border-color: var(--primary); background: #fff; }
+    .date-shortcuts { display: flex; gap: 6px; flex-wrap: wrap; }
+    .shortcut-btn { font-size: .72rem; border: 1px solid var(--gray-200); background: var(--gray-50); border-radius: 6px; padding: 4px 10px; cursor: pointer; color: var(--gray-600); transition: all .15s; white-space: nowrap; }
+    .shortcut-btn:hover, .shortcut-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+    .btn-reset { margin-right: auto; font-size: .82rem; border: 1px solid var(--gray-200); background: #fff; border-radius: 8px; padding: 7px 16px; cursor: pointer; color: var(--gray-600); transition: all .15s; }
+    .btn-reset:hover { border-color: var(--red); color: var(--red); }
+
+    /* KPI CARDS */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi-card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; border-right: 4px solid transparent; transition: transform .15s; }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-card.total  { border-color: var(--primary); }
+    .kpi-card.green  { border-color: var(--green); }
+    .kpi-card.red    { border-color: var(--red); }
+    .kpi-card.blue   { border-color: var(--blue); }
+    .kpi-card.amber  { border-color: var(--amber); }
+    .kpi-label { font-size: .78rem; color: var(--gray-600); font-weight: 600; }
+    .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .kpi-card.total  .kpi-value { color: var(--primary); }
+    .kpi-card.green  .kpi-value { color: var(--green); }
+    .kpi-card.red    .kpi-value { color: var(--red); }
+    .kpi-card.blue   .kpi-value { color: var(--blue); }
+    .kpi-card.amber  .kpi-value { color: var(--amber); }
+    .kpi-sub { font-size: .72rem; color: var(--gray-400); }
+
+    /* CHARTS ROW */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 800px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+    .chart-card h3 { font-size: .85rem; font-weight: 700; color: var(--gray-600); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* TABLE SECTION */
+    .table-section { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .table-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .table-header h3 { font-size: .9rem; font-weight: 700; margin-left: auto; }
+    .search-input { border: 1px solid var(--gray-200); border-radius: 8px; padding: 7px 12px; font-size: .83rem; outline: none; width: 220px; }
+    .search-input:focus { border-color: var(--primary); }
+    .export-btns { display: flex; gap: 8px; }
+    .export-btn { font-size: .78rem; border: 1px solid var(--gray-200); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; color: var(--gray-600); transition: all .15s; font-weight: 600; }
+    .export-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    th { background: var(--gray-50); padding: 10px 14px; text-align: right; font-size: .75rem; color: var(--gray-600); font-weight: 700; border-bottom: 1px solid var(--gray-200); white-space: nowrap; cursor: pointer; user-select: none; }
+    th:hover { color: var(--primary); }
+    th .sort-icon { opacity: .3; font-size: .65rem; }
+    th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; color: var(--primary); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+
+    /* PAGINATION */
+    .pagination { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--gray-100); flex-wrap: wrap; gap: 10px; }
+    .pagination-info { font-size: .78rem; color: var(--gray-400); }
+    .pagination-btns { display: flex; gap: 6px; }
+    .page-btn { border: 1px solid var(--gray-200); background: #fff; border-radius: 6px; padding: 5px 10px; font-size: .78rem; cursor: pointer; min-width: 32px; text-align: center; transition: all .15s; }
+    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+    .page-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* LOADING / ERROR / EMPTY */
+    .state-msg { padding: 48px 20px; text-align: center; color: var(--gray-400); font-size: .9rem; }
+    .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { color: var(--red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><span>📊</span> דשבורד לידים – אוריגמי</h1>
+  <span id="last-updated"></span>
+</header>
+
+<main>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>מתאריך</label>
+      <input type="date" id="f-date-from" />
+    </div>
+    <div class="filter-group">
+      <label>עד תאריך</label>
+      <input type="date" id="f-date-to" />
+    </div>
+    <div class="filter-group" style="min-width:auto;">
+      <label>קיצורי דרך</label>
+      <div class="date-shortcuts">
+        <button class="shortcut-btn" data-range="today">היום</button>
+        <button class="shortcut-btn" data-range="yesterday">אתמול</button>
+        <button class="shortcut-btn" data-range="week">שבוע</button>
+        <button class="shortcut-btn" data-range="month">חודש</button>
+        <button class="shortcut-btn" data-range="year">שנה</button>
+        <button class="shortcut-btn active" data-range="all">הכל</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>אחראי</label>
+      <select id="f-responsible"><option value="">הכל</option></select>
+    </div>
+    <div class="filter-group">
+      <label>מקור הגעה</label>
+      <select id="f-source"><option value="">הכל</option></select>
+    </div>
+    <div class="filter-group">
+      <label>עיר</label>
+      <select id="f-city"><option value="">הכל</option></select>
+    </div>
+    <button class="btn-reset" id="btn-reset">↺ איפוס מסננים</button>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card total">
+      <div class="kpi-label">סה״כ לידים</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub">בטווח הנבחר</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">נרשמו</div>
+      <div class="kpi-value" id="kpi-registered">—</div>
+      <div class="kpi-sub" id="kpi-registered-pct"></div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">ממתינים לטיפול</div>
+      <div class="kpi-value" id="kpi-waiting">—</div>
+      <div class="kpi-sub" id="kpi-waiting-pct"></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">הסתיים טיפול</div>
+      <div class="kpi-value" id="kpi-done">—</div>
+      <div class="kpi-sub" id="kpi-done-pct"></div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">לא רלוונטי</div>
+      <div class="kpi-value" id="kpi-irrelevant">—</div>
+      <div class="kpi-sub" id="kpi-irrelevant-pct"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>לפי מקור הגעה</h3>
+      <div class="chart-wrap"><canvas id="chart-source"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>לפי עיר</h3>
+      <div class="chart-wrap"><canvas id="chart-city"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>לפי אחראי</h3>
+      <div class="chart-wrap"><canvas id="chart-responsible"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>לפי סטטוס</h3>
+      <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-section">
+    <div class="table-header">
+      <h3>טבלת לידים</h3>
+      <input class="search-input" id="tbl-search" type="search" placeholder="חיפוש..." />
+      <div class="export-btns">
+        <button class="export-btn" id="btn-csv">⬇ CSV</button>
+        <button class="export-btn" id="btn-excel">⬇ Excel</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="date">תאריך <span class="sort-icon">▲</span></th>
+            <th data-col="name">שם <span class="sort-icon">▲</span></th>
+            <th data-col="phone">טלפון <span class="sort-icon">▲</span></th>
+            <th data-col="city">עיר <span class="sort-icon">▲</span></th>
+            <th data-col="source">מקור הגעה <span class="sort-icon">▲</span></th>
+            <th data-col="responsible">אחראי <span class="sort-icon">▲</span></th>
+            <th data-col="status">סטטוס <span class="sort-icon">▲</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span class="pagination-info" id="tbl-info"></span>
+      <div class="pagination-btns" id="tbl-pages"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  allLeads: [],
+  filtered: [],
+  sortCol: 'date',
+  sortDir: 'desc',
+  page: 1,
+  pageSize: 20,
+  search: '',
+  filters: { dateFrom: '', dateTo: '', responsible: '', source: '', city: '' },
+};
+
+const CHARTS = {};
+const STATUS_COLORS = {
+  'נרשם':           { color: '#22c55e', bg: '#dcfce7' },
+  'לא רלוונטי':     { color: '#ef4444', bg: '#fee2e2' },
+  'הסתיים טיפול':   { color: '#3b82f6', bg: '#dbeafe' },
+  'ממתין לטיפול':   { color: '#f59e0b', bg: '#fef3c7' },
+};
+const PALETTE = ['#6366f1','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#14b8a6','#f97316'];
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function loadData() {
+  showTableState('loading');
+  try {
+    const res = await fetch('/api/leads');
+    if (!res.ok) throw new Error(`שגיאת שרת ${res.status}`);
+    const json = await res.json();
+
+    // Normalize — map Origami field names to our internal schema
+    state.allLeads = normalizeLeads(json);
+
+    populateFilters();
+    applyFilters();
+    updateLastUpdated();
+  } catch (e) {
+    showTableState('error', e.message);
+  }
+}
+
+function normalizeLeads(json) {
+  // Origami returns data in various shapes — adapt as needed once you see the real response
+  const rows = Array.isArray(json) ? json
+              : json.data ? json.data
+              : json.entities ? json.entities
+              : json.result ? json.result
+              : [];
+
+  return rows.map((r, i) => ({
+    id:          r.id ?? r.entity_id ?? i,
+    date:        r.date ?? r.created_at ?? r.registration_date ?? '',
+    name:        r.name ?? r.full_name ?? r.contact_name ?? '',
+    phone:       r.phone ?? r.mobile ?? r.telephone ?? '',
+    city:        r.city ?? r.city_name ?? '',
+    source:      r.source ?? r.lead_source ?? r.arrival_source ?? '',
+    responsible: r.responsible ?? r.owner ?? r.assigned_to ?? '',
+    status:      r.status ?? r.lead_status ?? '',
+  }));
+}
+
+// ── FILTERS ──────────────────────────────────────────────────────────────────
+function populateFilters() {
+  const unique = key => [...new Set(state.allLeads.map(l => l[key]).filter(Boolean))].sort();
+
+  fillSelect('f-responsible', unique('responsible'));
+  fillSelect('f-source',      unique('source'));
+  fillSelect('f-city',        unique('city'));
+}
+
+function fillSelect(id, values) {
+  const sel = document.getElementById(id);
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">הכל</option>' +
+    values.map(v => `<option value="${v}">${v}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function applyFilters() {
+  const { dateFrom, dateTo, responsible, source, city } = state.filters;
+  const q = state.search.toLowerCase();
+
+  state.filtered = state.allLeads.filter(l => {
+    if (dateFrom && l.date < dateFrom) return false;
+    if (dateTo   && l.date > dateTo)   return false;
+    if (responsible && l.responsible !== responsible) return false;
+    if (source      && l.source      !== source)      return false;
+    if (city        && l.city        !== city)         return false;
+    if (q && !Object.values(l).join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  state.page = 1;
+  updateKPIs();
+  updateCharts();
+  renderTable();
+}
+
+// ── KPIs ─────────────────────────────────────────────────────────────────────
+function updateKPIs() {
+  const leads = state.filtered;
+  const total = leads.length;
+  const count = s => leads.filter(l => l.status === s).length;
+
+  const registered = count('נרשם');
+  const waiting    = count('ממתין לטיפול');
+  const done       = count('הסתיים טיפול');
+  const irrelevant = count('לא רלוונטי');
+
+  setText('kpi-total',      total);
+  setText('kpi-registered', registered);
+  setText('kpi-waiting',    waiting);
+  setText('kpi-done',       done);
+  setText('kpi-irrelevant', irrelevant);
+
+  const pct = n => total ? `${Math.round(n/total*100)}% מהסה״כ` : '';
+  setText('kpi-registered-pct', pct(registered));
+  setText('kpi-waiting-pct',    pct(waiting));
+  setText('kpi-done-pct',       pct(done));
+  setText('kpi-irrelevant-pct', pct(irrelevant));
+}
+
+// ── CHARTS ───────────────────────────────────────────────────────────────────
+function groupBy(arr, key) {
+  return arr.reduce((acc, item) => {
+    const v = item[key] || 'לא ידוע';
+    acc[v] = (acc[v] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function updateCharts() {
+  renderBarChart('chart-source',      groupBy(state.filtered, 'source'),      PALETTE);
+  renderBarChart('chart-city',        groupBy(state.filtered, 'city'),        PALETTE);
+  renderBarChart('chart-responsible', groupBy(state.filtered, 'responsible'), PALETTE);
+
+  const statusGroups = groupBy(state.filtered, 'status');
+  const statusColors = Object.keys(statusGroups).map(s => STATUS_COLORS[s]?.color ?? '#9ca3af');
+  renderDoughnut('chart-status', statusGroups, statusColors);
+}
+
+function renderBarChart(id, data, colors) {
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+
+  if (CHARTS[id]) CHARTS[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  CHARTS[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } }, grid: { color: '#f3f4f6' } }
+      }
+    }
+  });
+}
+
+function renderDoughnut(id, data, colors) {
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+
+  if (CHARTS[id]) CHARTS[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  CHARTS[id] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 12 } } },
+      cutout: '62%'
+    }
+  });
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────────────
+function renderTable() {
+  const sorted = [...state.filtered].sort((a, b) => {
+    const av = a[state.sortCol] ?? '';
+    const bv = b[state.sortCol] ?? '';
+    return state.sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  const total = sorted.length;
+  const pages = Math.max(1, Math.ceil(total / state.pageSize));
+  state.page = Math.min(state.page, pages);
+
+  const start = (state.page - 1) * state.pageSize;
+  const rows  = sorted.slice(start, start + state.pageSize);
+
+  if (total === 0) { showTableState('empty'); return; }
+
+  const tbody = document.getElementById('tbl-body');
+  tbody.innerHTML = rows.map(l => {
+    const sc = STATUS_COLORS[l.status] ?? { color: '#6b7280', bg: '#f3f4f6' };
+    return `<tr>
+      <td>${formatDate(l.date)}</td>
+      <td>${esc(l.name)}</td>
+      <td dir="ltr">${esc(l.phone)}</td>
+      <td>${esc(l.city)}</td>
+      <td>${esc(l.source)}</td>
+      <td>${esc(l.responsible)}</td>
+      <td><span class="badge" style="color:${sc.color};background:${sc.bg}">${esc(l.status)}</span></td>
+    </tr>`;
+  }).join('');
+
+  setText('tbl-info', `מציג ${start+1}–${Math.min(start+state.pageSize, total)} מתוך ${total} לידים`);
+  renderPagination(pages);
+  updateSortHeaders();
+}
+
+function renderPagination(pages) {
+  const cont = document.getElementById('tbl-pages');
+  const p = state.page;
+  let btns = '';
+
+  btns += `<button class="page-btn" ${p===1?'disabled':''} onclick="goPage(${p-1})">‹</button>`;
+
+  const range = [...new Set([1, Math.max(1,p-1), p, Math.min(pages,p+1), pages])].sort((a,b)=>a-b);
+  let prev = 0;
+  range.forEach(n => {
+    if (n - prev > 1) btns += `<button class="page-btn" disabled>…</button>`;
+    btns += `<button class="page-btn ${n===p?'active':''}" onclick="goPage(${n})">${n}</button>`;
+    prev = n;
+  });
+
+  btns += `<button class="page-btn" ${p===pages?'disabled':''} onclick="goPage(${p+1})">›</button>`;
+  cont.innerHTML = btns;
+}
+
+function goPage(n) { state.page = n; renderTable(); }
+
+function updateSortHeaders() {
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    const col = th.dataset.col;
+    th.classList.remove('sort-asc','sort-desc');
+    const icon = th.querySelector('.sort-icon');
+    if (col === state.sortCol) {
+      th.classList.add(state.sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+      icon.textContent = state.sortDir === 'asc' ? '▲' : '▼';
+    } else {
+      icon.textContent = '▲';
+    }
+  });
+}
+
+function showTableState(type, msg = '') {
+  document.getElementById('tbl-body').innerHTML = `
+    <tr><td colspan="7">
+      <div class="state-msg ${type==='error'?'error-msg':''}">
+        ${type==='loading' ? '<div class="spinner"></div><br>טוען נתונים...' : ''}
+        ${type==='empty'   ? 'לא נמצאו לידים בסינון הנוכחי' : ''}
+        ${type==='error'   ? `שגיאה בטעינת הנתונים: ${msg}` : ''}
+      </div>
+    </td></tr>`;
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const headers = ['תאריך','שם','טלפון','עיר','מקור הגעה','אחראי','סטטוס'];
+  const rows = state.filtered.map(l =>
+    [l.date, l.name, l.phone, l.city, l.source, l.responsible, l.status]
+    .map(v => `"${String(v).replace(/"/g,'""')}"`)
+    .join(',')
+  );
+  const bom = '﻿';
+  download(bom + [headers.join(','), ...rows].join('\r\n'), 'leads.csv', 'text/csv');
+}
+
+function exportExcel() {
+  // Simple HTML-table-based Excel (opens in Excel)
+  const headers = ['תאריך','שם','טלפון','עיר','מקור הגעה','אחראי','סטטוס'];
+  const rows = state.filtered.map(l =>
+    `<tr>${[l.date, l.name, l.phone, l.city, l.source, l.responsible, l.status]
+      .map(v => `<td>${esc(String(v))}</td>`).join('')}</tr>`
+  );
+  const xml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="UTF-8"><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+    <x:Name>לידים</x:Name><x:WorksheetOptions><x:DisplayRightToLeft/></x:WorksheetOptions>
+    </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml></head>
+    <body><table dir="rtl"><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.join('')}</table></body></html>`;
+  download('﻿'+xml, 'leads.xls', 'application/vnd.ms-excel');
+}
+
+function download(content, filename, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+}
+
+// ── DATE SHORTCUTS ────────────────────────────────────────────────────────────
+function setDateRange(range) {
+  const today = new Date();
+  const fmt = d => d.toISOString().slice(0,10);
+  let from = '', to = '';
+
+  if (range === 'today') {
+    from = to = fmt(today);
+  } else if (range === 'yesterday') {
+    const y = new Date(today); y.setDate(y.getDate()-1);
+    from = to = fmt(y);
+  } else if (range === 'week') {
+    const w = new Date(today); w.setDate(w.getDate()-6);
+    from = fmt(w); to = fmt(today);
+  } else if (range === 'month') {
+    const m = new Date(today); m.setDate(1);
+    from = fmt(m); to = fmt(today);
+  } else if (range === 'year') {
+    from = `${today.getFullYear()}-01-01`; to = fmt(today);
+  }
+
+  document.getElementById('f-date-from').value = from;
+  document.getElementById('f-date-to').value   = to;
+  state.filters.dateFrom = from;
+  state.filters.dateTo   = to;
+
+  document.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-range="${range}"]`)?.classList.add('active');
+  applyFilters();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatDate(d) {
+  if (!d) return '';
+  const parts = d.slice(0,10).split('-');
+  return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d;
+}
+function updateLastUpdated() {
+  const now = new Date();
+  document.getElementById('last-updated').textContent =
+    `עדכון אחרון: ${now.toLocaleTimeString('he-IL')}`;
+}
+
+// ── EVENT LISTENERS ───────────────────────────────────────────────────────────
+document.getElementById('f-date-from').addEventListener('change', e => {
+  state.filters.dateFrom = e.target.value;
+  document.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
+  applyFilters();
+});
+document.getElementById('f-date-to').addEventListener('change', e => {
+  state.filters.dateTo = e.target.value;
+  document.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
+  applyFilters();
+});
+document.getElementById('f-responsible').addEventListener('change', e => {
+  state.filters.responsible = e.target.value; applyFilters();
+});
+document.getElementById('f-source').addEventListener('change', e => {
+  state.filters.source = e.target.value; applyFilters();
+});
+document.getElementById('f-city').addEventListener('change', e => {
+  state.filters.city = e.target.value; applyFilters();
+});
+document.getElementById('tbl-search').addEventListener('input', e => {
+  state.search = e.target.value; applyFilters();
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  ['f-date-from','f-date-to','f-responsible','f-source','f-city'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('tbl-search').value = '';
+  state.filters = { dateFrom:'', dateTo:'', responsible:'', source:'', city:'' };
+  state.search = '';
+  document.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-range="all"]').classList.add('active');
+  applyFilters();
+});
+document.querySelectorAll('.shortcut-btn').forEach(btn =>
+  btn.addEventListener('click', () => setDateRange(btn.dataset.range))
+);
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (state.sortCol === col) {
+      state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortCol = col;
+      state.sortDir = 'asc';
+    }
+    renderTable();
+  });
+});
+document.getElementById('btn-csv').addEventListener('click', exportCSV);
+document.getElementById('btn-excel').addEventListener('click', exportExcel);
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
