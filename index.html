@@ -556,12 +556,28 @@ function normalizeLeads(json) {
 async function loadData() {
   document.getElementById('kpi-grid').innerHTML = `<div class="state-msg"><div class="spinner"></div><div>טוען נתונים...</div></div>`;
   try {
-    const res  = await fetch('/api/leads');
-    if (!res.ok) throw new Error(`שגיאת שרת ${res.status}`);
-    const json = await res.json();
+    const [leadsRes, optionsRes] = await Promise.all([
+      fetch('/api/leads'),
+      fetch('/api/filter-options'),
+    ]);
+    if (!leadsRes.ok)   throw new Error(`שגיאת שרת ${leadsRes.status}`);
+    const json    = await leadsRes.json();
     if (json.error) throw new Error(json.error);
     S.all = normalizeLeads(json);
-    populateFilters();
+
+    // Populate filters from entities (all options, not just what's in leads)
+    if (optionsRes.ok) {
+      const opts = await optionsRes.json();
+      if (!opts.error) {
+        MS.city.setOptions(opts.cities       || []);
+        MS.source.setOptions(opts.sources    || []);
+        MS.responsible.setOptions(opts.responsibles || []);
+      }
+    }
+    // Status always from actual lead data
+    const uniqStatus = [...new Set(S.all.map(l => l.status).filter(Boolean))].sort();
+    MS.status.setOptions(uniqStatus);
+
     applyFilters();
     document.getElementById('last-updated').textContent = `עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
   } catch(e) {
@@ -571,10 +587,8 @@ async function loadData() {
 
 // ── FILTERS ──────────────────────────────────────────────────────
 function populateFilters() {
+  // Called as fallback only — main population happens in loadData from entities
   const uniq = k => [...new Set(S.all.map(l => l[k]).filter(Boolean))].sort();
-  MS.responsible.setOptions(uniq('responsible'));
-  MS.source.setOptions(uniq('source'));
-  MS.city.setOptions(uniq('city'));
   MS.status.setOptions(uniq('status'));
 }
 
