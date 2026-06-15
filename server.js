@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 
 const app = express();
 app.use(cors());
-app.use(express.static('.'));
+app.use(express.static('public'));
 
 const BASE_URL = process.env.ORIGAMI_BASE_URL;
 const USERNAME = process.env.ORIGAMI_USERNAME;
