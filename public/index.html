@@ -366,7 +366,7 @@
       <div class="tbl-wrap"><table id="tbl-source"><thead></thead><tbody></tbody></table></div>
     </div>
     <div class="pivot-card">
-      <div class="pivot-head"><h3>לפי סטטוס</h3><span class="pivot-total-badge" id="badge-status">0</span><button class="export-btn" onclick="exportPivot('status')">⬇ Excel</button></div>
+      <div class="pivot-head"><h3>לפי עיר</h3><span class="pivot-total-badge" id="badge-status">0</span><button class="export-btn" onclick="exportPivot('status')">⬇ Excel</button></div>
       <div class="tbl-wrap"><table id="tbl-status"><thead></thead><tbody></tbody></table></div>
     </div>
     <div class="pivot-card">
@@ -736,7 +736,7 @@ function renderDoughnut(id, data) {
 function renderAllPivots() {
   renderPivot('responsible','נציג אחראי','status');
   renderPivot('source','מקור ליד','status');
-  renderPivot('status','סטטוס','responsible');
+  renderPivot('city','עיר','status');
   renderRawTable();
 }
 
