@@ -194,15 +194,27 @@
     .tbl-wrap { overflow-x: auto; }
     .raw-table-wrap { overflow-x: auto; max-height: 480px; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .8rem; }
-    th { background: #f8fafc; padding: 11px 14px; text-align: right; font-size: .65rem; color: var(--muted); font-weight: 800; border-bottom: 2px solid var(--border); white-space: nowrap; letter-spacing: .04em; position: sticky; top: 0; z-index: 1; }
-    td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
+    th { background: linear-gradient(to bottom, #f0f2ff, #f8fafc); padding: 11px 14px; text-align: right; font-size: .65rem; color: var(--primary); font-weight: 800; border-bottom: 2px solid #c7d2fe; white-space: nowrap; letter-spacing: .04em; position: sticky; top: 0; z-index: 1; }
+    td { padding: 11px 14px; border-bottom: 1px solid #f0f1f8; white-space: nowrap; }
+    tr:nth-child(even) td { background: #fafbff; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f8f9ff; }
-    .total-row td { background: #eef2ff !important; font-weight: 800; border-top: 2px solid var(--border); }
+    tr:hover td { background: #eef2ff !important; }
+    .total-row td { background: linear-gradient(to left, #eef2ff, #e0e7ff) !important; font-weight: 800; border-top: 2px solid #c7d2fe; color: var(--primary); }
     .total-col { font-weight: 700; color: var(--primary); }
-    .row-name { font-weight: 600; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+    .row-name { font-weight: 700; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
     .num { text-align: center; }
     .zero { color: #d1d5db; }
+    .cell-heat-1 { background: #fef9c3 !important; }
+    .cell-heat-2 { background: #fde68a !important; }
+    .cell-heat-3 { background: #fbbf24 !important; color: #78350f; }
+    .cell-heat-4 { background: #f59e0b !important; color: #fff; font-weight: 800; }
+    /* status badges */
+    .status-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+    /* pivot table colored header accent */
+    .pivot-card:nth-child(1) .pivot-head { border-right: 4px solid #4338ca; }
+    .pivot-card:nth-child(2) .pivot-head { border-right: 4px solid #7c3aed; }
+    .pivot-card:nth-child(3) .pivot-head { border-right: 4px solid #c084fc; }
+    .pivot-card:nth-child(4) .pivot-head { border-right: 4px solid #f59e0b; }
 
     /* ── EMPTY STATE ── */
     .state-msg { padding: 48px 24px; text-align: center; color: var(--muted); }
@@ -338,10 +350,10 @@
       <div class="kpi-card"><div class="kpi-accent"></div><div class="kpi-label">טוען...</div><div class="kpi-value">—</div></div>
     </div>
     <div class="charts-row">
-      <div class="chart-card"><h3>לפי נציג אחראי</h3><div class="chart-wrap"><canvas id="chart-responsible"></canvas></div></div>
-      <div class="chart-card"><h3>לפי מקור ליד</h3><div class="chart-wrap"><canvas id="chart-source"></canvas></div></div>
-      <div class="chart-card"><h3>לפי סטטוס</h3><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
-      <div class="chart-card"><h3>לפי עיר</h3><div class="chart-wrap"><canvas id="chart-city"></canvas></div></div>
+      <div class="chart-card"><h3>לפי נציג אחראי</h3><div class="chart-wrap" id="wrap-chart-responsible"><canvas id="chart-responsible"></canvas></div></div>
+      <div class="chart-card"><h3>לפי מקור ליד</h3><div class="chart-wrap" id="wrap-chart-source"><canvas id="chart-source"></canvas></div></div>
+      <div class="chart-card"><h3>לפי סטטוס</h3><div class="chart-wrap" id="wrap-chart-status"><canvas id="chart-status"></canvas></div></div>
+      <div class="chart-card"><h3>לפי עיר</h3><div class="chart-wrap" id="wrap-chart-city"><canvas id="chart-city"></canvas></div></div>
     </div>
   </div>
 
@@ -677,27 +689,47 @@ function groupBy(arr, key) {
   return out;
 }
 
-function renderBar(id, data) {
-  const canvas = document.getElementById(id);
-  if (!canvas) return;
+function renderChart(id, type, data, extraOpts) {
+  const wrap = document.getElementById('wrap-' + id);
+  if (!wrap) return;
+
+  if (CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; }
+
+  // Always restore canvas (never let it disappear)
+  let canvas = document.getElementById(id);
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = id;
+    wrap.innerHTML = '';
+    wrap.appendChild(canvas);
+  }
+
   const labels = Object.keys(data), values = Object.values(data);
-  if (CHARTS[id]) CHARTS[id].destroy();
-  if (!labels.length) { canvas.parentElement.innerHTML = '<div class="state-msg"><span class="icon">📭</span>אין נתונים</div>'; return; }
-  CHARTS[id] = new Chart(canvas.getContext('2d'), {
-    type: 'bar',
-    data: { labels, datasets: [{ data: values, backgroundColor: PAL.slice(0,labels.length).map(c=>c+'bb'), borderColor: PAL.slice(0,labels.length), borderWidth: 1.5, borderRadius: 7, borderSkipped: false }] },
+
+  // Show/hide empty message
+  let emptyEl = wrap.querySelector('.chart-empty');
+  if (!emptyEl) {
+    emptyEl = document.createElement('div');
+    emptyEl.className = 'chart-empty state-msg';
+    emptyEl.innerHTML = '<span class="icon">📭</span>אין נתונים';
+    wrap.appendChild(emptyEl);
+  }
+  canvas.style.display   = labels.length ? '' : 'none';
+  emptyEl.style.display  = labels.length ? 'none' : '';
+  if (!labels.length) return;
+
+  CHARTS[id] = new Chart(canvas.getContext('2d'), { type, data: { labels, datasets: extraOpts.datasets(values, labels) }, options: extraOpts.options });
+}
+
+function renderBar(id, data) {
+  renderChart(id, 'bar', data, {
+    datasets: (values, labels) => [{ data: values, backgroundColor: PAL.slice(0,labels.length).map(c=>c+'bb'), borderColor: PAL.slice(0,labels.length), borderWidth: 1.5, borderRadius: 7, borderSkipped: false }],
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#9ca3af'}}, y:{beginAtZero:true,ticks:{precision:0,color:'#9ca3af',font:{size:10}},grid:{color:'#f3f4f6'}} } },
   });
 }
 function renderDoughnut(id, data) {
-  const canvas = document.getElementById(id);
-  if (!canvas) return;
-  const labels = Object.keys(data), values = Object.values(data);
-  if (CHARTS[id]) CHARTS[id].destroy();
-  if (!labels.length) { canvas.parentElement.innerHTML = '<div class="state-msg"><span class="icon">📭</span>אין נתונים</div>'; return; }
-  CHARTS[id] = new Chart(canvas.getContext('2d'), {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: PAL.slice(0,labels.length), borderWidth:2, borderColor:'#fff', hoverOffset:8 }] },
+  renderChart(id, 'doughnut', data, {
+    datasets: (values, labels) => [{ data: values, backgroundColor: PAL.slice(0,labels.length), borderWidth:2, borderColor:'#fff', hoverOffset:8 }],
     options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{size:11}, padding:12, color:'#374151' } } }, cutout:'62%' },
   });
 }
@@ -721,15 +753,22 @@ function renderPivot(rowKey, rowLabel, colKey) {
     tbl.querySelector('tbody').innerHTML=`<tr><td colspan="3"><div class="state-msg"><span class="icon">📭</span>אין נתונים</div></td></tr>`;
     return;
   }
-  tbl.querySelector('thead').innerHTML=`<tr><th>${esc(rowLabel)}</th>${cols.map(c=>`<th class="num">${esc(c)}</th>`).join('')}<th class="num total-col">סה״כ</th></tr>`;
+  tbl.querySelector('thead').innerHTML=`<tr><th>${esc(rowLabel)}</th>${cols.map((c,i)=>`<th class="num" style="color:${PAL[i%PAL.length]}">${esc(c)}</th>`).join('')}<th class="num total-col">סה״כ</th></tr>`;
   const grandTotals={}; cols.forEach(c=>{grandTotals[c]=0;}); let grand=0;
+  const allCounts=[];
   const bodyRows=rows.map(rv=>{
     const sub=leads.filter(l=>l[rowKey]===rv);
     const counts={}; cols.forEach(c=>{counts[c]=sub.filter(l=>l[colKey]===c).length; grandTotals[c]+=counts[c];});
     const rowTotal=sub.length; grand+=rowTotal;
-    return `<tr><td class="row-name">${esc(rv)}</td>${cols.map(c=>`<td class="num">${counts[c]>0?`<strong>${counts[c]}</strong>`:'<span class="zero">—</span>'}</td>`).join('')}<td class="num total-col">${rowTotal}</td></tr>`;
+    allCounts.push(...Object.values(counts));
+    return {rv, counts, rowTotal};
   });
-  tbl.querySelector('tbody').innerHTML=bodyRows.join('')+`<tr class="total-row"><td>סה״כ</td>${cols.map(c=>`<td class="num">${grandTotals[c]}</td>`).join('')}<td class="num total-col">${grand}</td></tr>`;
+  const maxVal=Math.max(...allCounts,1);
+  tbl.querySelector('tbody').innerHTML=bodyRows.map(({rv,counts,rowTotal})=>`<tr>
+    <td class="row-name">${esc(rv)}</td>
+    ${cols.map(c=>{const v=counts[c]; return `<td class="num ${heatClass(v,maxVal)}">${v>0?`<strong>${v}</strong>`:'<span class="zero">—</span>'}</td>`;}).join('')}
+    <td class="num total-col"><strong>${rowTotal}</strong></td>
+  </tr>`).join('')+`<tr class="total-row"><td>סה״כ</td>${cols.map(c=>`<td class="num">${grandTotals[c]}</td>`).join('')}<td class="num total-col"><strong>${grand}</strong></td></tr>`;
 }
 
 function renderRawTable() {
@@ -740,6 +779,35 @@ function renderRawTable() {
   const allKeys=[...(new Set(leads.flatMap(l=>Object.keys(l.raw||{}))))];
   tbl.querySelector('thead').innerHTML=`<tr><th>#</th><th>תאריך</th>${allKeys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr>`;
   tbl.querySelector('tbody').innerHTML=leads.map((l,i)=>`<tr><td class="num">${i+1}</td><td>${l.date||'—'}</td>${allKeys.map(k=>{const v=l.raw?.[k]; return `<td>${(v===null||v===undefined||v==='')?'<span class="zero">—</span>':esc(String(v))}</td>`;}).join('')}</tr>`).join('');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function heatClass(v, max) {
+  if (!v || !max) return '';
+  const r = v / max;
+  if (r > 0.75) return 'cell-heat-4';
+  if (r > 0.5)  return 'cell-heat-3';
+  if (r > 0.25) return 'cell-heat-2';
+  if (r > 0)    return 'cell-heat-1';
+  return '';
+}
+
+const STATUS_COLORS = {
+  'נרשם':                    '#10b981',
+  'נרשם ללא אמצעי תשלום':   '#34d399',
+  'נרשם זכיה':               '#6ee7b7',
+  'המשך טיפול':              '#3b82f6',
+  'מתלבטת חמה':              '#f59e0b',
+  'מתלבטת קרה':              '#94a3b8',
+  'מעוניינת בתקופה אחרת':   '#8b5cf6',
+  'אין מענה':                '#64748b',
+  'לא רלוונטי':              '#ef4444',
+  'חדש':                     '#c084fc',
+};
+function statusBadge(val, key) {
+  if (key !== 'status') return esc(val);
+  const color = STATUS_COLORS[val] || '#94a3b8';
+  return `<span class="status-badge" style="background:${color}22;color:${color};border:1px solid ${color}55">${esc(val)}</span>`;
 }
 
 // ── EXPORT ────────────────────────────────────────────────────────
