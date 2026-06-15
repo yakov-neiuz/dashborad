@@ -205,7 +205,6 @@
     .row-name { font-weight: 700; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
     .num { text-align: center; }
     .zero { color: #d1d5db; }
-    .cell-heat-1, .cell-heat-2, .cell-heat-3, .cell-heat-4 {}
     /* status badges */
     .status-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
     /* pivot table colored header accent */
@@ -764,7 +763,7 @@ function renderPivot(rowKey, rowLabel, colKey) {
   const maxVal=Math.max(...allCounts,1);
   tbl.querySelector('tbody').innerHTML=bodyRows.map(({rv,counts,rowTotal})=>`<tr>
     <td class="row-name">${esc(rv)}</td>
-    ${cols.map(c=>{const v=counts[c]; return `<td class="num ${heatClass(v,maxVal)}">${v>0?`<strong>${v}</strong>`:'<span class="zero">—</span>'}</td>`;}).join('')}
+    ${cols.map(c=>{const v=counts[c]; return `<td class="num">${v>0?`<strong>${v}</strong>`:'<span class="zero">—</span>'}</td>`;}).join('')}
     <td class="num total-col"><strong>${rowTotal}</strong></td>
   </tr>`).join('')+`<tr class="total-row"><td>סה״כ</td>${cols.map(c=>`<td class="num">${grandTotals[c]}</td>`).join('')}<td class="num total-col"><strong>${grand}</strong></td></tr>`;
 }
@@ -780,16 +779,6 @@ function renderRawTable() {
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
-function heatClass(v, max) {
-  if (!v || !max) return '';
-  const r = v / max;
-  if (r > 0.75) return 'cell-heat-4';
-  if (r > 0.5)  return 'cell-heat-3';
-  if (r > 0.25) return 'cell-heat-2';
-  if (r > 0)    return 'cell-heat-1';
-  return '';
-}
-
 const STATUS_COLORS = {
   'נרשם':                    '#10b981',
   'נרשם ללא אמצעי תשלום':   '#34d399',
