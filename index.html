@@ -7,759 +7,483 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --primary: #4f46e5;
-      --primary-dark: #3730a3;
-      --primary-light: #e0e7ff;
-      --surface: #ffffff;
-      --bg: #f1f5f9;
-      --border: #e2e8f0;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --radius: 14px;
-      --shadow: 0 2px 8px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
-      --shadow-lg: 0 8px 24px rgba(0,0,0,.10);
+      --primary: #4f46e5; --primary-dark: #3730a3; --primary-light: #e0e7ff;
+      --surface: #fff; --bg: #f1f5f9; --border: #e2e8f0;
+      --text: #0f172a; --muted: #64748b;
+      --radius: 14px; --shadow: 0 2px 8px rgba(0,0,0,.07);
     }
-
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* HEADER */
     header {
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-      padding: 0 28px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      padding: 0 28px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 12px rgba(79,70,229,.3);
     }
     header h1 { color: #fff; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    header h1 .icon { font-size: 1.4rem; }
-    #last-updated { color: rgba(255,255,255,.7); font-size: .75rem; }
+    #last-updated { color: rgba(255,255,255,.65); font-size: .73rem; }
 
-    main { padding: 24px 28px; max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    /* VIEW TOGGLE */
+    .view-toggle {
+      display: flex; background: rgba(255,255,255,.15); border-radius: 10px; padding: 3px; gap: 2px;
+    }
+    .view-btn {
+      border: none; background: none; color: rgba(255,255,255,.75);
+      padding: 6px 16px; border-radius: 8px; font-size: .84rem; font-weight: 700;
+      cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .view-btn.active { background: #fff; color: var(--primary); }
+
+    main { padding: 20px 28px; max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 
     /* FILTER BAR */
     .filter-bar {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 18px 22px;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      align-items: flex-end;
-      border: 1px solid var(--border);
+      background: var(--surface); border-radius: var(--radius);
+      padding: 16px 20px; box-shadow: var(--shadow); border: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
     }
-    .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
-    .filter-group label { font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
-    .filter-group select, .filter-group input[type=date] {
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 11px;
-      font-size: .84rem;
-      color: var(--text);
-      background: var(--bg);
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
+    .fg { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+    .fg label { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .fg select, .fg input[type=date] {
+      border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 10px;
+      font-size: .83rem; color: var(--text); background: var(--bg); outline: none; transition: border-color .15s;
     }
-    .filter-group select:focus, .filter-group input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
-      background: var(--surface);
+    .fg select:focus, .fg input:focus { border-color: var(--primary); background: var(--surface); }
+    .shortcuts { display: flex; gap: 5px; flex-wrap: wrap; }
+    .sc-btn {
+      font-size: .72rem; border: 1.5px solid var(--border); background: var(--bg);
+      border-radius: 7px; padding: 5px 10px; cursor: pointer; color: var(--muted);
+      font-weight: 600; transition: all .15s;
     }
-    .date-shortcuts { display: flex; gap: 5px; flex-wrap: wrap; }
-    .shortcut-btn {
-      font-size: .74rem;
-      border: 1.5px solid var(--border);
-      background: var(--bg);
-      border-radius: 7px;
-      padding: 5px 11px;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: all .15s;
-      font-weight: 600;
-    }
-    .shortcut-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
-    .shortcut-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .sc-btn:hover, .sc-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
     .btn-reset {
-      margin-right: auto;
-      font-size: .82rem;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      border-radius: 8px;
-      padding: 8px 18px;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-weight: 600;
-      transition: all .15s;
+      margin-right: auto; font-size: .82rem; border: 1.5px solid var(--border);
+      background: var(--surface); border-radius: 8px; padding: 7px 16px;
+      cursor: pointer; color: var(--muted); font-weight: 600; transition: all .15s;
     }
-    .btn-reset:hover { border-color: #ef4444; color: #ef4444; background: #fff5f5; }
+    .btn-reset:hover { border-color: #ef4444; color: #ef4444; }
 
-    /* KPI CARDS */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+    /* ── DASHBOARD VIEW ── */
+    #view-dashboard { display: flex; flex-direction: column; gap: 18px; }
+    #view-tables    { display: none;  flex-direction: column; gap: 18px; }
+
+    /* KPI */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
     .kpi-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: transform .2s, box-shadow .2s;
-      position: relative;
-      overflow: hidden;
+      background: var(--surface); border-radius: var(--radius);
+      padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border);
+      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
     }
-    .kpi-card::before {
-      content: '';
-      position: absolute;
-      top: 0; right: 0; left: 0;
-      height: 3px;
-      background: var(--kpi-color, var(--primary));
-    }
-    .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-    .kpi-label { font-size: .75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
-    .kpi-value { font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--kpi-color, var(--primary)); }
-    .kpi-sub { font-size: .72rem; color: var(--text-muted); font-weight: 500; }
-    .kpi-icon { position: absolute; top: 14px; left: 18px; font-size: 1.6rem; opacity: .12; }
+    .kpi-card::before { content:''; position:absolute; top:0;right:0;left:0; height:3px; background:var(--kc,var(--primary)); }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .kpi-label { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: var(--kc, var(--primary)); line-height: 1; }
+    .kpi-pct { font-size: .71rem; color: var(--muted); margin-top: 4px; }
 
     /* CHARTS */
     .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 800px) { .charts-row { grid-template-columns: 1fr; } }
-    .chart-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-    .chart-card h3 { font-size: .8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 16px; }
+    @media(max-width:800px){ .charts-row { grid-template-columns: 1fr; } }
+    .chart-card { background: var(--surface); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .chart-card h3 { font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
     .chart-wrap { position: relative; height: 200px; }
 
-    /* PIVOT TABLE */
-    .pivot-section {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-    .section-header {
-      padding: 18px 22px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+    /* ── TABLES VIEW ── */
+    .pivot-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+    .pivot-head {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
       background: linear-gradient(to left, #fafafa, var(--surface));
     }
-    .section-header h3 { font-size: .95rem; font-weight: 800; color: var(--text); }
-    .search-input {
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-size: .83rem;
-      outline: none;
-      width: 200px;
-      transition: border-color .15s;
+    .pivot-head h3 { font-size: .9rem; font-weight: 800; }
+    .pivot-total-badge {
+      background: var(--primary-light); color: var(--primary);
+      border-radius: 20px; padding: 2px 12px; font-size: .78rem; font-weight: 700;
     }
-    .search-input:focus { border-color: var(--primary); }
-    .export-btns { display: flex; gap: 8px; margin-right: auto; }
     .export-btn {
-      font-size: .78rem;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      border-radius: 8px;
-      padding: 7px 14px;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-weight: 700;
-      transition: all .15s;
+      margin-right: auto; font-size: .76rem; border: 1.5px solid var(--border);
+      background: var(--surface); border-radius: 8px; padding: 6px 13px;
+      cursor: pointer; color: var(--muted); font-weight: 700; transition: all .15s;
     }
     .export-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
 
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    thead th {
-      background: #f8fafc;
-      padding: 11px 14px;
-      text-align: right;
-      font-size: .73rem;
-      color: var(--text-muted);
-      font-weight: 700;
-      border-bottom: 2px solid var(--border);
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
-      letter-spacing: .03em;
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .81rem; }
+    th {
+      background: #f8fafc; padding: 10px 13px; text-align: right;
+      font-size: .7rem; color: var(--muted); font-weight: 700;
+      border-bottom: 2px solid var(--border); white-space: nowrap;
+      letter-spacing: .03em; position: sticky; top: 0;
     }
-    thead th:hover { color: var(--primary); background: var(--primary-light); }
-    thead th.sort-asc, thead th.sort-desc { color: var(--primary); }
-    td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+    td { padding: 10px 13px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #f8fafc; }
-
-    /* Pivot specific */
-    .pivot-total-row td { background: #f8fafc; font-weight: 700; border-top: 2px solid var(--border); }
-    .pivot-total-col { font-weight: 700; color: var(--primary); }
-    .pivot-name { font-weight: 600; }
-    .pivot-zero { color: #cbd5e1; }
-    .pivot-count { text-align: center; }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: .71rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    /* PAGINATION */
-    .pagination {
-      padding: 14px 22px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .pagination-info { font-size: .78rem; color: var(--text-muted); }
-    .pagination-btns { display: flex; gap: 5px; }
-    .page-btn {
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      border-radius: 7px;
-      padding: 5px 11px;
-      font-size: .78rem;
-      cursor: pointer;
-      min-width: 32px;
-      text-align: center;
-      transition: all .15s;
-      font-weight: 600;
-    }
-    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
-    .page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .page-btn:disabled { opacity: .3; cursor: not-allowed; }
-
-    /* TABS */
-    .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); padding: 0 22px; }
-    .tab-btn {
-      border: none;
-      background: none;
-      padding: 12px 18px;
-      font-size: .84rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      transition: color .15s;
-    }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-    .tab-btn:hover { color: var(--primary); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    .total-row td { background: #f1f5f9 !important; font-weight: 700; border-top: 2px solid var(--border); }
+    .total-col { font-weight: 700; color: var(--primary); }
+    .row-name { font-weight: 600; }
+    .zero { color: #cbd5e1; }
+    .num { text-align: center; }
 
     /* STATE */
-    .state-msg { padding: 56px 20px; text-align: center; color: var(--text-muted); font-size: .9rem; }
-    .spinner {
-      display: inline-block; width: 32px; height: 32px;
-      border: 3px solid var(--border); border-top-color: var(--primary);
-      border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px;
-    }
+    .state-msg { padding: 48px; text-align: center; color: var(--muted); }
+    .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 10px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .error-msg { color: #ef4444; }
+    .err { color: #ef4444; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1><span class="icon">📊</span> דשבורד לידים – אוריגמי</h1>
+  <h1>📊 דשבורד לידים – אוריגמי</h1>
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="dashboard">📈 דשבורד</button>
+    <button class="view-btn" data-view="tables">📋 טבלאות</button>
+  </div>
   <span id="last-updated"></span>
 </header>
 
 <main>
 
-  <!-- FILTER BAR -->
+  <!-- FILTERS -->
   <div class="filter-bar">
-    <div class="filter-group">
+    <div class="fg">
       <label>מתאריך</label>
-      <input type="date" id="f-date-from" />
+      <input type="date" id="f-from" />
     </div>
-    <div class="filter-group">
+    <div class="fg">
       <label>עד תאריך</label>
-      <input type="date" id="f-date-to" />
+      <input type="date" id="f-to" />
     </div>
-    <div class="filter-group" style="min-width:auto">
+    <div class="fg" style="min-width:auto">
       <label>קיצורי דרך</label>
-      <div class="date-shortcuts">
-        <button class="shortcut-btn" data-range="today">היום</button>
-        <button class="shortcut-btn" data-range="yesterday">אתמול</button>
-        <button class="shortcut-btn" data-range="week">שבוע</button>
-        <button class="shortcut-btn" data-range="month">חודש</button>
-        <button class="shortcut-btn" data-range="year">שנה</button>
-        <button class="shortcut-btn active" data-range="all">הכל</button>
+      <div class="shortcuts">
+        <button class="sc-btn" data-r="today">היום</button>
+        <button class="sc-btn" data-r="yesterday">אתמול</button>
+        <button class="sc-btn" data-r="week">שבוע</button>
+        <button class="sc-btn" data-r="month">חודש</button>
+        <button class="sc-btn" data-r="year">שנה</button>
+        <button class="sc-btn active" data-r="all">הכל</button>
       </div>
     </div>
-    <div class="filter-group">
-      <label>אחראי</label>
+    <div class="fg">
+      <label>נציג אחראי</label>
       <select id="f-responsible"><option value="">הכל</option></select>
     </div>
-    <div class="filter-group">
-      <label>מקור הגעה</label>
+    <div class="fg">
+      <label>מקור ליד</label>
       <select id="f-source"><option value="">הכל</option></select>
     </div>
-    <div class="filter-group">
+    <div class="fg">
       <label>עיר</label>
       <select id="f-city"><option value="">הכל</option></select>
     </div>
     <button class="btn-reset" id="btn-reset">↺ איפוס</button>
   </div>
 
-  <!-- KPI CARDS -->
-  <div class="kpi-grid" id="kpi-grid">
-    <div class="kpi-card" style="--kpi-color:#4f46e5">
-      <span class="kpi-icon">📋</span>
-      <div class="kpi-label">סה״כ לידים</div>
-      <div class="kpi-value" id="kpi-total">—</div>
-      <div class="kpi-sub">בטווח הנבחר</div>
+  <!-- DASHBOARD VIEW -->
+  <div id="view-dashboard">
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">טוען...</div><div class="kpi-value">—</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>לפי נציג אחראי</h3><div class="chart-wrap"><canvas id="chart-responsible"></canvas></div></div>
+      <div class="chart-card"><h3>לפי מקור ליד</h3><div class="chart-wrap"><canvas id="chart-source"></canvas></div></div>
+      <div class="chart-card"><h3>לפי סטטוס</h3><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
+      <div class="chart-card"><h3>לפי עיר</h3><div class="chart-wrap"><canvas id="chart-city"></canvas></div></div>
     </div>
   </div>
 
-  <!-- CHARTS -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <h3>לפי מקור הגעה</h3>
-      <div class="chart-wrap"><canvas id="chart-source"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>לפי אחראי</h3>
-      <div class="chart-wrap"><canvas id="chart-responsible"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>לפי סטטוס</h3>
-      <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>לפי עיר</h3>
-      <div class="chart-wrap"><canvas id="chart-city"></canvas></div>
-    </div>
-  </div>
-
-  <!-- TABLES -->
-  <div class="pivot-section">
-    <div class="section-header">
-      <h3>ניתוח נתונים</h3>
-      <div class="export-btns">
-        <button class="export-btn" id="btn-csv">⬇ CSV</button>
-        <button class="export-btn" id="btn-excel">⬇ Excel</button>
+  <!-- TABLES VIEW -->
+  <div id="view-tables">
+    <!-- Pivot 1: by responsible -->
+    <div class="pivot-card">
+      <div class="pivot-head">
+        <h3>לפי נציג אחראי</h3>
+        <span class="pivot-total-badge" id="badge-responsible">0 לידים</span>
+        <button class="export-btn" onclick="exportPivot('responsible')">⬇ Excel</button>
       </div>
+      <div class="tbl-wrap"><table id="tbl-responsible"><thead></thead><tbody></tbody></table></div>
     </div>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="pivot">לפי אחראי × סטטוס</button>
-      <button class="tab-btn" data-tab="records">רשומות</button>
+    <!-- Pivot 2: by source -->
+    <div class="pivot-card">
+      <div class="pivot-head">
+        <h3>לפי מקור ליד</h3>
+        <span class="pivot-total-badge" id="badge-source">0 לידים</span>
+        <button class="export-btn" onclick="exportPivot('source')">⬇ Excel</button>
+      </div>
+      <div class="tbl-wrap"><table id="tbl-source"><thead></thead><tbody></tbody></table></div>
     </div>
-
-    <!-- PIVOT TAB -->
-    <div class="tab-content active" id="tab-pivot">
-      <div class="table-wrap">
-        <table id="pivot-table">
-          <thead id="pivot-head"></thead>
-          <tbody id="pivot-body"></tbody>
-        </table>
+    <!-- Pivot 3: by status -->
+    <div class="pivot-card">
+      <div class="pivot-head">
+        <h3>לפי סטטוס</h3>
+        <span class="pivot-total-badge" id="badge-status">0 לידים</span>
+        <button class="export-btn" onclick="exportPivot('status')">⬇ Excel</button>
       </div>
-    </div>
-
-    <!-- RECORDS TAB -->
-    <div class="tab-content" id="tab-records">
-      <div style="padding:12px 22px 0; display:flex; gap:12px; align-items:center;">
-        <input class="search-input" id="tbl-search" type="search" placeholder="חיפוש..." />
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th data-col="date">תאריך <span class="si">▲</span></th>
-              <th data-col="name">שם <span class="si">▲</span></th>
-              <th data-col="phone">טלפון <span class="si">▲</span></th>
-              <th data-col="city">עיר <span class="si">▲</span></th>
-              <th data-col="source">מקור הגעה <span class="si">▲</span></th>
-              <th data-col="responsible">אחראי <span class="si">▲</span></th>
-              <th data-col="status">סטטוס <span class="si">▲</span></th>
-            </tr>
-          </thead>
-          <tbody id="tbl-body"></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <span class="pagination-info" id="tbl-info"></span>
-        <div class="pagination-btns" id="tbl-pages"></div>
-      </div>
+      <div class="tbl-wrap"><table id="tbl-status"><thead></thead><tbody></tbody></table></div>
     </div>
   </div>
 
 </main>
 
 <script>
-const state = {
-  allLeads: [], filtered: [],
-  sortCol: 'date', sortDir: 'desc',
-  page: 1, pageSize: 25, search: '',
-  filters: { dateFrom:'', dateTo:'', responsible:'', source:'', city:'' },
+// ── STATE ─────────────────────────────────────────────────────────
+const S = {
+  all: [], filtered: [],
+  filters: { from:'', to:'', responsible:'', source:'', city:'' },
 };
 const CHARTS = {};
-const PALETTE = ['#4f46e5','#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6','#f97316','#84cc16','#0ea5e9'];
+const PAL = ['#4f46e5','#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6','#f97316','#84cc16','#0ea5e9','#a855f7'];
 
-// ── API ───────────────────────────────────────────────────────────
+// ── PARSE ORIGAMI FORMAT ──────────────────────────────────────────
+function parseInstance(inst) {
+  const f = {};
+  for (const grp of inst.field_groups || []) {
+    for (const row of grp.fields_data || []) {
+      if (!Array.isArray(row)) continue;
+      for (const fld of row) {
+        if (!fld.field_name) continue;
+        const v = fld.value;
+        if (v !== undefined && v !== null && v !== '') {
+          f[fld.field_name.trim()] = v;
+          if (fld.field_data_name) f[fld.field_data_name] = v;
+        }
+      }
+    }
+  }
+  return f;
+}
+
+function normalizeLeads(json) {
+  const rows = json.data || [];
+  console.log('שדות ברשומה הראשונה:', rows[0] ? Object.keys(parseInstance(rows[0].instance_data)) : 'אין נתונים');
+  return rows.map((item, i) => {
+    const inst = item.instance_data;
+    const f = parseInstance(inst);
+    return {
+      id:          inst._id ?? i,
+      date:        inst.insertTimestamp?.slice(0,10) ?? '',
+      name:        f['שם'] ?? f['שם מלא'] ?? f['שם פרטי'] ?? f['שם ושם משפחה'] ?? f['שם הליד'] ?? '',
+      phone:       f['טלפון'] ?? f['נייד'] ?? f['פלאפון'] ?? f['מספר טלפון'] ?? '',
+      city:        f['עיר'] ?? f['שם העיר'] ?? f['יישוב'] ?? '',
+      source:      f['מקור הגעה'] ?? f['מקור'] ?? f['ספירה של מקור הליד'] ?? f['מקור ליד'] ?? '',
+      responsible: f['אחראי מטפל'] ?? f['אחראי'] ?? f['נציג'] ?? f['נציג אחראי'] ?? f['משתמש אחראי'] ?? '',
+      status:      f['סטטוס ליד'] ?? f['סטטוס'] ?? f['סטטוס של מקור הליד'] ?? f['מצב'] ?? '',
+      raw: f,
+    };
+  });
+}
+
+// ── LOAD ──────────────────────────────────────────────────────────
 async function loadData() {
-  showState('tbl-body', 'loading');
+  setLoading(true);
   try {
     const res = await fetch('/api/leads');
     if (!res.ok) throw new Error(`שגיאת שרת ${res.status}`);
     const json = await res.json();
-    console.log('RAW first record:', JSON.stringify(json?.[0] ?? json?.data?.[0] ?? json, null, 2));
-    state.allLeads = normalizeLeads(json);
+    S.all = normalizeLeads(json);
     populateFilters();
     applyFilters();
-    updateLastUpdated();
-  } catch (e) {
-    showState('tbl-body', 'error', e.message);
+    document.getElementById('last-updated').textContent = `עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
+  } catch(e) {
+    document.getElementById('kpi-grid').innerHTML = `<div class="state-msg err">שגיאה: ${e.message}</div>`;
+  } finally {
+    setLoading(false);
   }
 }
 
-function normalizeLeads(json) {
-  const rows = Array.isArray(json) ? json
-             : json.data      ? json.data
-             : json.entities  ? json.entities
-             : json.result    ? json.result
-             : json.instances ? json.instances
-             : json.records   ? json.records
-             : [];
-
-  return rows.map((r, i) => ({
-    id:          r.id ?? r.entity_id ?? r.instance_id ?? i,
-    date:        r.date ?? r.created_at ?? r.creation_date ?? r.registration_date ?? r.תאריך ?? '',
-    name:        r.name ?? r.full_name ?? r.contact_name ?? r.שם ?? r.שם_מלא ?? '',
-    phone:       r.phone ?? r.mobile ?? r.telephone ?? r.טלפון ?? '',
-    city:        r.city ?? r.city_name ?? r.עיר ?? '',
-    source:      r.source ?? r.lead_source ?? r.arrival_source ?? r.מקור ?? r['מקור הגעה'] ?? '',
-    responsible: r.responsible ?? r.owner ?? r.assigned_to ?? r.אחראי ?? r['אחראי מטפל'] ?? '',
-    status:      r.status ?? r.lead_status ?? r.סטטוס ?? r['סטטוס ליד'] ?? '',
-    raw:         r,
-  }));
+function setLoading(v) {
+  if (v) document.getElementById('kpi-grid').innerHTML = `<div class="state-msg"><div class="spinner"></div><br>טוען נתונים...</div>`;
 }
 
 // ── FILTERS ───────────────────────────────────────────────────────
 function populateFilters() {
-  const unique = key => [...new Set(state.allLeads.map(l => l[key]).filter(Boolean))].sort();
-  fillSelect('f-responsible', unique('responsible'));
-  fillSelect('f-source',      unique('source'));
-  fillSelect('f-city',        unique('city'));
+  const u = k => [...new Set(S.all.map(l=>l[k]).filter(Boolean))].sort();
+  fill('f-responsible', u('responsible'));
+  fill('f-source',      u('source'));
+  fill('f-city',        u('city'));
 }
-function fillSelect(id, values) {
-  const sel = document.getElementById(id);
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">הכל</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
-  if (cur) sel.value = cur;
+function fill(id, vals) {
+  const el = document.getElementById(id);
+  const cur = el.value;
+  el.innerHTML = '<option value="">הכל</option>' + vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  if (cur) el.value = cur;
 }
 
 function applyFilters() {
-  const { dateFrom, dateTo, responsible, source, city } = state.filters;
-  const q = state.search.toLowerCase();
-  state.filtered = state.allLeads.filter(l => {
-    if (dateFrom && l.date && l.date < dateFrom) return false;
-    if (dateTo   && l.date && l.date > dateTo)   return false;
+  const {from, to, responsible, source, city} = S.filters;
+  S.filtered = S.all.filter(l => {
+    if (from && l.date < from) return false;
+    if (to   && l.date > to)   return false;
     if (responsible && l.responsible !== responsible) return false;
     if (source      && l.source      !== source)      return false;
     if (city        && l.city        !== city)         return false;
-    if (q && !Object.values(l).join(' ').toLowerCase().includes(q)) return false;
     return true;
   });
-  state.page = 1;
-  updateKPIs();
-  updateCharts();
-  renderPivot();
-  renderTable();
+  renderDashboard();
+  renderAllPivots();
 }
 
-// ── KPIs ──────────────────────────────────────────────────────────
-function updateKPIs() {
-  const leads = state.filtered;
+// ── DASHBOARD ─────────────────────────────────────────────────────
+function renderDashboard() {
+  const leads = S.filtered;
   const total = leads.length;
   const byStatus = groupBy(leads, 'status');
-  const statuses = Object.keys(byStatus);
+  const colors = PAL;
 
-  const statusColors = ['#4f46e5','#10b981','#f59e0b','#ef4444','#06b6d4','#7c3aed','#ec4899','#14b8a6','#f97316','#84cc16'];
-  const icons = ['📋','✅','⏳','❌','🔵','🟣','🟠','🟢','🔴','🟡'];
+  const kpis = [
+    { label: 'סה״כ לידים', val: total, color: '#4f46e5' },
+    ...Object.entries(byStatus).map(([s,n],i) => ({ label: s||'ללא סטטוס', val: n, color: colors[(i+1)%colors.length] }))
+  ];
 
-  const grid = document.getElementById('kpi-grid');
-  grid.innerHTML = `
-    <div class="kpi-card" style="--kpi-color:#4f46e5">
-      <span class="kpi-icon">📋</span>
-      <div class="kpi-label">סה״כ לידים</div>
-      <div class="kpi-value">${total}</div>
-      <div class="kpi-sub">בטווח הנבחר</div>
-    </div>
-    ${statuses.map((s, i) => `
-      <div class="kpi-card" style="--kpi-color:${statusColors[i % statusColors.length]}">
-        <span class="kpi-icon">${icons[i % icons.length]}</span>
-        <div class="kpi-label">${esc(s)}</div>
-        <div class="kpi-value">${byStatus[s]}</div>
-        <div class="kpi-sub">${total ? Math.round(byStatus[s]/total*100) : 0}% מהסה״כ</div>
-      </div>
-    `).join('')}
-  `;
-  document.getElementById('kpi-total').textContent; // not needed anymore
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="--kc:${k.color}">
+      <div class="kpi-label">${esc(k.label)}</div>
+      <div class="kpi-value">${k.val}</div>
+      <div class="kpi-pct">${total&&k.label!=='סה״כ לידים' ? Math.round(k.val/total*100)+'%' : ''}</div>
+    </div>`).join('');
+
+  renderBar('chart-responsible', groupBy(leads,'responsible'));
+  renderBar('chart-source',      groupBy(leads,'source'));
+  renderBar('chart-city',        groupBy(leads,'city'));
+  renderDoughnut('chart-status', groupBy(leads,'status'));
 }
 
-// ── CHARTS ────────────────────────────────────────────────────────
 function groupBy(arr, key) {
-  return arr.reduce((acc, item) => {
-    const v = item[key] || 'לא ידוע';
-    acc[v] = (acc[v] || 0) + 1;
-    return acc;
-  }, {});
+  return arr.reduce((a,l) => { const v=l[key]||'ללא'; a[v]=(a[v]||0)+1; return a; }, {});
 }
 
-function updateCharts() {
-  renderBarChart('chart-source',      groupBy(state.filtered, 'source'));
-  renderBarChart('chart-responsible', groupBy(state.filtered, 'responsible'));
-  renderBarChart('chart-city',        groupBy(state.filtered, 'city'));
-  renderDoughnut('chart-status',      groupBy(state.filtered, 'status'));
-}
-
-function renderBarChart(id, data) {
-  const labels = Object.keys(data);
-  const values = Object.values(data);
+function renderBar(id, data) {
+  const labels = Object.keys(data), values = Object.values(data);
   if (CHARTS[id]) CHARTS[id].destroy();
-  const ctx = document.getElementById(id).getContext('2d');
-  CHARTS[id] = new Chart(ctx, {
+  CHARTS[id] = new Chart(document.getElementById(id).getContext('2d'), {
     type: 'bar',
-    data: { labels, datasets: [{ data: values, backgroundColor: PALETTE.slice(0, labels.length), borderRadius: 6, borderSkipped: false }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } }
-      }
-    }
+    data: { labels, datasets: [{ data: values, backgroundColor: PAL.slice(0,labels.length), borderRadius: 6, borderSkipped: false }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#f1f5f9'}} } }
   });
 }
-
 function renderDoughnut(id, data) {
-  const labels = Object.keys(data);
-  const values = Object.values(data);
+  const labels = Object.keys(data), values = Object.values(data);
   if (CHARTS[id]) CHARTS[id].destroy();
-  const ctx = document.getElementById(id).getContext('2d');
-  CHARTS[id] = new Chart(ctx, {
+  CHARTS[id] = new Chart(document.getElementById(id).getContext('2d'), {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: PALETTE.slice(0, labels.length), borderWidth: 2, borderColor: '#fff' }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 10 } } },
-      cutout: '60%'
-    }
+    data: { labels, datasets: [{ data: values, backgroundColor: PAL.slice(0,labels.length), borderWidth:2, borderColor:'#fff' }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{size:11}, padding:10 } } }, cutout:'60%' }
   });
 }
 
-// ── PIVOT TABLE ───────────────────────────────────────────────────
-function renderPivot() {
-  const leads = state.filtered;
-  const allStatuses = [...new Set(leads.map(l => l.status).filter(Boolean))].sort();
-  const allResponsibles = [...new Set(leads.map(l => l.responsible).filter(Boolean))].sort();
+// ── PIVOT TABLES ──────────────────────────────────────────────────
+function renderAllPivots() {
+  renderPivot('responsible', 'נציג אחראי', 'status');
+  renderPivot('source',      'מקור ליד',   'status');
+  renderPivot('status',      'סטטוס',       'responsible');
+}
+
+function renderPivot(rowKey, rowLabel, colKey) {
+  const leads = S.filtered;
+  const tbl = document.getElementById('tbl-'+rowKey);
+  const badge = document.getElementById('badge-'+rowKey);
+
+  const rows = [...new Set(leads.map(l=>l[rowKey]).filter(Boolean))].sort();
+  const cols = [...new Set(leads.map(l=>l[colKey]).filter(Boolean))].sort();
+
+  badge.textContent = `${leads.length} לידים`;
 
   if (!leads.length) {
-    document.getElementById('pivot-head').innerHTML = '';
-    document.getElementById('pivot-body').innerHTML = `<tr><td colspan="3"><div class="state-msg">אין נתונים להצגה</div></td></tr>`;
+    tbl.querySelector('thead').innerHTML = '';
+    tbl.querySelector('tbody').innerHTML = `<tr><td colspan="3"><div class="state-msg">אין נתונים</div></td></tr>`;
     return;
   }
 
-  // Header
-  const head = document.getElementById('pivot-head');
-  head.innerHTML = `<tr>
-    <th style="min-width:140px">אחראי מטפל</th>
-    ${allStatuses.map(s => `<th class="pivot-count">${esc(s)}</th>`).join('')}
-    <th class="pivot-count pivot-total-col">סה״כ</th>
+  // Head
+  tbl.querySelector('thead').innerHTML = `<tr>
+    <th>${rowLabel}</th>
+    ${cols.map(c=>`<th class="num">${esc(c)}</th>`).join('')}
+    <th class="num total-col">סה״כ</th>
   </tr>`;
 
   // Body
   const grandTotals = {};
-  allStatuses.forEach(s => grandTotals[s] = 0);
+  cols.forEach(c => grandTotals[c]=0);
   let grandTotal = 0;
 
-  const rows = allResponsibles.map(responsible => {
-    const responsibleLeads = leads.filter(l => l.responsible === responsible);
+  const bodyRows = rows.map(rowVal => {
+    const rowLeads = leads.filter(l=>l[rowKey]===rowVal);
     const counts = {};
-    allStatuses.forEach(s => {
-      counts[s] = responsibleLeads.filter(l => l.status === s).length;
-      grandTotals[s] += counts[s];
-    });
-    const rowTotal = responsibleLeads.length;
+    cols.forEach(c => { counts[c]=rowLeads.filter(l=>l[colKey]===c).length; grandTotals[c]+=counts[c]; });
+    const rowTotal = rowLeads.length;
     grandTotal += rowTotal;
     return `<tr>
-      <td class="pivot-name">${esc(responsible)}</td>
-      ${allStatuses.map(s => `<td class="pivot-count">${counts[s] > 0 ? `<strong>${counts[s]}</strong>` : '<span class="pivot-zero">—</span>'}</td>`).join('')}
-      <td class="pivot-count pivot-total-col">${rowTotal}</td>
+      <td class="row-name">${esc(rowVal)}</td>
+      ${cols.map(c=>`<td class="num">${counts[c]>0?`<strong>${counts[c]}</strong>`:`<span class="zero">—</span>`}</td>`).join('')}
+      <td class="num total-col">${rowTotal}</td>
     </tr>`;
   });
 
-  // Grand total row
-  const totalRow = `<tr class="pivot-total-row">
-    <td><strong>סה״כ</strong></td>
-    ${allStatuses.map(s => `<td class="pivot-count">${grandTotals[s]}</td>`).join('')}
-    <td class="pivot-count pivot-total-col">${grandTotal}</td>
+  const totalRow = `<tr class="total-row">
+    <td>סה״כ</td>
+    ${cols.map(c=>`<td class="num">${grandTotals[c]}</td>`).join('')}
+    <td class="num total-col">${grandTotal}</td>
   </tr>`;
 
-  document.getElementById('pivot-body').innerHTML = rows.join('') + totalRow;
+  tbl.querySelector('tbody').innerHTML = bodyRows.join('') + totalRow;
 }
-
-// ── RECORDS TABLE ─────────────────────────────────────────────────
-function renderTable() {
-  const sorted = [...state.filtered].sort((a, b) => {
-    const av = a[state.sortCol] ?? '';
-    const bv = b[state.sortCol] ?? '';
-    return state.sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-  });
-  const total = sorted.length;
-  if (!total) { showState('tbl-body', 'empty'); return; }
-
-  const pages = Math.max(1, Math.ceil(total / state.pageSize));
-  state.page = Math.min(state.page, pages);
-  const start = (state.page - 1) * state.pageSize;
-  const rows = sorted.slice(start, start + state.pageSize);
-
-  const statusColors = ['#4f46e5','#10b981','#f59e0b','#ef4444','#06b6d4','#7c3aed','#ec4899','#14b8a6','#f97316','#84cc16'];
-  const uniqueStatuses = [...new Set(state.allLeads.map(l => l.status).filter(Boolean))].sort();
-  const statusColorMap = {};
-  uniqueStatuses.forEach((s, i) => { statusColorMap[s] = statusColors[i % statusColors.length]; });
-
-  document.getElementById('tbl-body').innerHTML = rows.map(l => {
-    const color = statusColorMap[l.status] ?? '#64748b';
-    return `<tr>
-      <td>${formatDate(l.date)}</td>
-      <td><strong>${esc(l.name)}</strong></td>
-      <td dir="ltr">${esc(l.phone)}</td>
-      <td>${esc(l.city)}</td>
-      <td>${esc(l.source)}</td>
-      <td>${esc(l.responsible)}</td>
-      <td><span class="badge" style="background:${color}22;color:${color}">${esc(l.status)}</span></td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('tbl-info').textContent = `מציג ${start+1}–${Math.min(start+state.pageSize,total)} מתוך ${total}`;
-  renderPagination(pages);
-}
-
-function renderPagination(pages) {
-  const p = state.page;
-  const range = [...new Set([1, Math.max(1,p-1), p, Math.min(pages,p+1), pages])].sort((a,b)=>a-b);
-  let btns = `<button class="page-btn" ${p===1?'disabled':''} onclick="goPage(${p-1})">‹</button>`;
-  let prev = 0;
-  range.forEach(n => {
-    if (n - prev > 1) btns += `<button class="page-btn" disabled>…</button>`;
-    btns += `<button class="page-btn ${n===p?'active':''}" onclick="goPage(${n})">${n}</button>`;
-    prev = n;
-  });
-  btns += `<button class="page-btn" ${p===pages?'disabled':''} onclick="goPage(${p+1})">›</button>`;
-  document.getElementById('tbl-pages').innerHTML = btns;
-}
-function goPage(n) { state.page = n; renderTable(); }
 
 // ── EXPORT ────────────────────────────────────────────────────────
-function exportCSV() {
-  const h = ['תאריך','שם','טלפון','עיר','מקור הגעה','אחראי','סטטוס'];
-  const rows = state.filtered.map(l => [l.date,l.name,l.phone,l.city,l.source,l.responsible,l.status].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
-  download('﻿'+[h.join(','),...rows].join('\r\n'), 'leads.csv', 'text/csv');
-}
-function exportExcel() {
-  const h = ['תאריך','שם','טלפון','עיר','מקור הגעה','אחראי','סטטוס'];
-  const rows = state.filtered.map(l=>`<tr>${[l.date,l.name,l.phone,l.city,l.source,l.responsible,l.status].map(v=>`<td>${esc(String(v??''))}</td>`).join('')}</tr>`);
-  const xml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table dir="rtl"><tr>${h.map(v=>`<th>${v}</th>`).join('')}</tr>${rows.join('')}</table></body></html>`;
-  download('﻿'+xml, 'leads.xls', 'application/vnd.ms-excel');
-}
-function download(content, filename, mime) {
+function exportPivot(key) {
+  const tbl = document.getElementById('tbl-'+key);
+  const rows = [...tbl.querySelectorAll('tr')].map(tr =>
+    [...tr.querySelectorAll('th,td')].map(td => `"${td.innerText.trim().replace(/"/g,'""')}"`).join(',')
+  );
+  const bom = '﻿';
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
-  a.download = filename;
+  a.href = URL.createObjectURL(new Blob([bom+rows.join('\r\n')], {type:'text/csv'}));
+  a.download = `pivot_${key}.csv`;
   a.click();
 }
 
 // ── DATE SHORTCUTS ────────────────────────────────────────────────
-function setDateRange(range) {
-  const today = new Date();
-  const fmt = d => d.toISOString().slice(0,10);
-  let from = '', to = '';
-  if (range==='today')     { from = to = fmt(today); }
-  else if (range==='yesterday') { const y=new Date(today); y.setDate(y.getDate()-1); from=to=fmt(y); }
-  else if (range==='week') { const w=new Date(today); w.setDate(w.getDate()-6); from=fmt(w); to=fmt(today); }
-  else if (range==='month') { const m=new Date(today); m.setDate(1); from=fmt(m); to=fmt(today); }
-  else if (range==='year') { from=`${today.getFullYear()}-01-01`; to=fmt(today); }
-  document.getElementById('f-date-from').value = from;
-  document.getElementById('f-date-to').value   = to;
-  state.filters.dateFrom = from;
-  state.filters.dateTo   = to;
-  document.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`[data-range="${range}"]`)?.classList.add('active');
+function setRange(r) {
+  const t = new Date(), fmt = d=>d.toISOString().slice(0,10);
+  let from='', to='';
+  if (r==='today')     { from=to=fmt(t); }
+  else if (r==='yesterday') { const y=new Date(t); y.setDate(y.getDate()-1); from=to=fmt(y); }
+  else if (r==='week') { const w=new Date(t); w.setDate(w.getDate()-6); from=fmt(w); to=fmt(t); }
+  else if (r==='month') { const m=new Date(t); m.setDate(1); from=fmt(m); to=fmt(t); }
+  else if (r==='year') { from=`${t.getFullYear()}-01-01`; to=fmt(t); }
+  document.getElementById('f-from').value=from;
+  document.getElementById('f-to').value=to;
+  S.filters.from=from; S.filters.to=to;
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-r="${r}"]`)?.classList.add('active');
   applyFilters();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────
 function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function formatDate(d) {
-  if (!d) return '';
-  const p = String(d).slice(0,10).split('-');
-  return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
-}
-function updateLastUpdated() {
-  document.getElementById('last-updated').textContent = `עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
-}
-function showState(id, type, msg='') {
-  document.getElementById(id).innerHTML = `<tr><td colspan="10"><div class="state-msg ${type==='error'?'error-msg':''}">
-    ${type==='loading'?'<div class="spinner"></div><br>טוען נתונים...':''}
-    ${type==='empty'?'לא נמצאו נתונים':''}
-    ${type==='error'?`שגיאה: ${msg}`:''}
-  </div></td></tr>`;
-}
 
 // ── EVENTS ────────────────────────────────────────────────────────
-document.getElementById('f-date-from').addEventListener('change', e => { state.filters.dateFrom=e.target.value; document.querySelectorAll('.shortcut-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
-document.getElementById('f-date-to').addEventListener('change',   e => { state.filters.dateTo=e.target.value;   document.querySelectorAll('.shortcut-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
-document.getElementById('f-responsible').addEventListener('change', e => { state.filters.responsible=e.target.value; applyFilters(); });
-document.getElementById('f-source').addEventListener('change',      e => { state.filters.source=e.target.value;      applyFilters(); });
-document.getElementById('f-city').addEventListener('change',        e => { state.filters.city=e.target.value;        applyFilters(); });
-document.getElementById('tbl-search').addEventListener('input',     e => { state.search=e.target.value; applyFilters(); });
-document.getElementById('btn-reset').addEventListener('click', () => {
-  ['f-date-from','f-date-to','f-responsible','f-source','f-city'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('tbl-search').value='';
-  state.filters={dateFrom:'',dateTo:'',responsible:'',source:'',city:''};
-  state.search='';
-  document.querySelectorAll('.shortcut-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[data-range="all"]').classList.add('active');
+document.getElementById('f-from').addEventListener('change', e=>{ S.filters.from=e.target.value; document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
+document.getElementById('f-to').addEventListener('change',   e=>{ S.filters.to=e.target.value;   document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
+document.getElementById('f-responsible').addEventListener('change', e=>{ S.filters.responsible=e.target.value; applyFilters(); });
+document.getElementById('f-source').addEventListener('change',      e=>{ S.filters.source=e.target.value;      applyFilters(); });
+document.getElementById('f-city').addEventListener('change',        e=>{ S.filters.city=e.target.value;        applyFilters(); });
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  ['f-from','f-to','f-responsible','f-source','f-city'].forEach(id=>document.getElementById(id).value='');
+  S.filters={from:'',to:'',responsible:'',source:'',city:''};
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[data-r="all"]').classList.add('active');
   applyFilters();
 });
-document.querySelectorAll('.shortcut-btn').forEach(b => b.addEventListener('click', () => setDateRange(b.dataset.range)));
-document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+document.querySelectorAll('.sc-btn').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.r)));
+document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', ()=>{
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  const v = btn.dataset.view;
+  document.getElementById('view-dashboard').style.display = v==='dashboard' ? 'flex' : 'none';
+  document.getElementById('view-tables').style.display    = v==='tables'    ? 'flex' : 'none';
 }));
-document.querySelectorAll('th[data-col]').forEach(th => th.addEventListener('click', () => {
-  const col = th.dataset.col;
-  state.sortDir = state.sortCol===col ? (state.sortDir==='asc'?'desc':'asc') : 'asc';
-  state.sortCol = col;
-  renderTable();
-}));
-document.getElementById('btn-csv').addEventListener('click', exportCSV);
-document.getElementById('btn-excel').addEventListener('click', exportExcel);
 
 loadData();
 </script>
