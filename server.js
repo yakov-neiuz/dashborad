@@ -18,7 +18,7 @@ const ENTITIES = {
 };
 
 async function fetchEntity(entityName) {
-  const res = await fetch(`${BASE_URL}/entities/api/entities_list/format/json`, {
+  const res = await fetch(`${BASE_URL}/entities/api/instance_data/format/json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

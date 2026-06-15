@@ -8,134 +8,352 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #4f46e5; --primary-dark: #3730a3; --primary-light: #e0e7ff;
-      --surface: #fff; --bg: #f1f5f9; --border: #e2e8f0;
-      --text: #0f172a; --muted: #64748b;
-      --radius: 14px; --shadow: 0 2px 8px rgba(0,0,0,.07);
+      --primary: #5b52e8;
+      --primary-dark: #3730a3;
+      --primary-light: #ede9fe;
+      --accent: #7c3aed;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --surface: #ffffff;
+      --bg: #f0f2f8;
+      --border: #e4e7f0;
+      --text: #111827;
+      --muted: #6b7280;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 20px rgba(91,82,232,.15);
     }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
+    /* ── HEADER ── */
     header {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      padding: 0 28px; height: 60px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 12px rgba(79,70,229,.3);
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      padding: 0 32px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 4px 20px rgba(79,70,229,.35);
     }
-    header h1 { color: #fff; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    #last-updated { color: rgba(255,255,255,.65); font-size: .73rem; }
+    .header-brand { color: #fff; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -.01em; white-space: nowrap; }
+    .header-brand span { opacity: .7; font-weight: 400; }
+    #last-updated { color: rgba(255,255,255,.55); font-size: .7rem; white-space: nowrap; margin-right: auto; }
 
-    /* VIEW TOGGLE */
     .view-toggle {
-      display: flex; background: rgba(255,255,255,.15); border-radius: 10px; padding: 3px; gap: 2px;
+      display: flex;
+      background: rgba(0,0,0,.2);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 2px;
+      flex-shrink: 0;
     }
     .view-btn {
-      border: none; background: none; color: rgba(255,255,255,.75);
-      padding: 6px 16px; border-radius: 8px; font-size: .84rem; font-weight: 700;
-      cursor: pointer; transition: all .15s; white-space: nowrap;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.65);
+      padding: 6px 18px;
+      border-radius: 9px;
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s;
+      white-space: nowrap;
     }
-    .view-btn.active { background: #fff; color: var(--primary); }
+    .view-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .view-btn:not(.active):hover { background: rgba(255,255,255,.12); color: #fff; }
 
-    main { padding: 20px 28px; max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+    /* ── MAIN ── */
+    main { padding: 22px 32px; max-width: 1540px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 
-    /* FILTER BAR */
+    /* ── FILTER BAR ── */
     .filter-bar {
-      background: var(--surface); border-radius: var(--radius);
-      padding: 16px 20px; box-shadow: var(--shadow); border: 1px solid var(--border);
-      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
     }
-    .fg { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
-    .fg label { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .filter-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 120px;
+    }
+    .fg label {
+      font-size: .67rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
     .fg select, .fg input[type=date] {
-      border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 10px;
-      font-size: .83rem; color: var(--text); background: var(--bg); outline: none; transition: border-color .15s;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 11px;
+      font-size: .83rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color .15s, background .15s;
+      font-family: inherit;
     }
-    .fg select:focus, .fg input:focus { border-color: var(--primary); background: var(--surface); }
-    .shortcuts { display: flex; gap: 5px; flex-wrap: wrap; }
+    .fg select:focus, .fg input:focus {
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(91,82,232,.1);
+    }
+    .fg select.has-value, .fg input.has-value {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    .filter-sep { width: 1px; height: 36px; background: var(--border); margin: 0 4px; align-self: flex-end; }
+
+    .shortcuts {
+      display: flex;
+      gap: 5px;
+      flex-wrap: nowrap;
+    }
     .sc-btn {
-      font-size: .72rem; border: 1.5px solid var(--border); background: var(--bg);
-      border-radius: 7px; padding: 5px 10px; cursor: pointer; color: var(--muted);
-      font-weight: 600; transition: all .15s;
+      font-size: .72rem;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 6px 12px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+      transition: all .15s;
+      white-space: nowrap;
     }
-    .sc-btn:hover, .sc-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .sc-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .sc-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(91,82,232,.3); }
+
     .btn-reset {
-      margin-right: auto; font-size: .82rem; border: 1.5px solid var(--border);
-      background: var(--surface); border-radius: 8px; padding: 7px 16px;
-      cursor: pointer; color: var(--muted); font-weight: 600; transition: all .15s;
+      margin-right: auto;
+      font-size: .8rem;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+      transition: all .15s;
+      align-self: flex-end;
     }
-    .btn-reset:hover { border-color: #ef4444; color: #ef4444; }
+    .btn-reset:hover { border-color: var(--danger); color: var(--danger); background: #fff5f5; }
 
-    /* ── DASHBOARD VIEW ── */
+    /* active filter chips */
+    .active-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .active-chips:empty { display: none; }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border-radius: 20px;
+      padding: 3px 10px 3px 6px;
+      font-size: .72rem;
+      font-weight: 700;
+      border: 1px solid rgba(91,82,232,.2);
+    }
+    .chip-x {
+      cursor: pointer;
+      width: 14px; height: 14px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .6rem;
+      font-weight: 900;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .chip-x:hover { background: var(--danger); }
+
+    /* ── VIEWS ── */
     #view-dashboard { display: flex; flex-direction: column; gap: 18px; }
-    #view-tables    { display: none;  flex-direction: column; gap: 18px; }
+    #view-tables    { display: none; flex-direction: column; gap: 18px; }
 
-    /* KPI */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+    /* ── KPI GRID ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
     .kpi-card {
-      background: var(--surface); border-radius: var(--radius);
-      padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border);
-      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px 20px 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+      cursor: default;
     }
-    .kpi-card::before { content:''; position:absolute; top:0;right:0;left:0; height:3px; background:var(--kc,var(--primary)); }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
-    .kpi-label { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
-    .kpi-value { font-size: 2rem; font-weight: 800; color: var(--kc, var(--primary)); line-height: 1; }
-    .kpi-pct { font-size: .71rem; color: var(--muted); margin-top: 4px; }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .kpi-accent { position: absolute; top: 0; right: 0; left: 0; height: 4px; background: var(--kc, var(--primary)); border-radius: var(--radius) var(--radius) 0 0; }
+    .kpi-label {
+      font-size: .67rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+    .kpi-value { font-size: 2.2rem; font-weight: 900; color: var(--kc, var(--primary)); line-height: 1; }
+    .kpi-pct { font-size: .7rem; color: var(--muted); margin-top: 6px; }
 
-    /* CHARTS */
+    /* ── CHARTS ── */
     .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media(max-width:800px){ .charts-row { grid-template-columns: 1fr; } }
-    .chart-card { background: var(--surface); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
-    .chart-card h3 { font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
-    .chart-wrap { position: relative; height: 200px; }
+    @media(max-width: 800px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .chart-card h3 {
+      font-size: .67rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 16px;
+    }
+    .chart-wrap { position: relative; height: 210px; }
 
-    /* ── TABLES VIEW ── */
-    .pivot-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+    /* ── TABLES ── */
+    .pivot-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
     .pivot-head {
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 10px;
-      background: linear-gradient(to left, #fafafa, var(--surface));
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fafbff;
     }
     .pivot-head h3 { font-size: .9rem; font-weight: 800; }
     .pivot-total-badge {
-      background: var(--primary-light); color: var(--primary);
-      border-radius: 20px; padding: 2px 12px; font-size: .78rem; font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: .75rem;
+      font-weight: 700;
     }
     .export-btn {
-      margin-right: auto; font-size: .76rem; border: 1.5px solid var(--border);
-      background: var(--surface); border-radius: 8px; padding: 6px 13px;
-      cursor: pointer; color: var(--muted); font-weight: 700; transition: all .15s;
+      margin-right: auto;
+      font-size: .74rem;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 6px 14px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+      transition: all .15s;
     }
     .export-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
 
     .tbl-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .81rem; }
     th {
-      background: #f8fafc; padding: 10px 13px; text-align: right;
-      font-size: .7rem; color: var(--muted); font-weight: 700;
-      border-bottom: 2px solid var(--border); white-space: nowrap;
-      letter-spacing: .03em; position: sticky; top: 0;
+      background: #f8fafc;
+      padding: 11px 14px;
+      text-align: right;
+      font-size: .67rem;
+      color: var(--muted);
+      font-weight: 800;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      letter-spacing: .04em;
+      position: sticky;
+      top: 0;
     }
-    td { padding: 10px 13px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+    td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f8fafc; }
-    .total-row td { background: #f1f5f9 !important; font-weight: 700; border-top: 2px solid var(--border); }
+    tr:hover td { background: #fafbff; }
+    .total-row td { background: #f0f2ff !important; font-weight: 800; border-top: 2px solid var(--border); }
     .total-col { font-weight: 700; color: var(--primary); }
-    .row-name { font-weight: 600; }
-    .zero { color: #cbd5e1; }
+    .row-name { font-weight: 600; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+    .zero { color: #d1d5db; }
     .num { text-align: center; }
 
-    /* STATE */
-    .state-msg { padding: 48px; text-align: center; color: var(--muted); }
-    .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 10px; }
+    /* ── STATES ── */
+    .state-msg { padding: 52px 24px; text-align: center; color: var(--muted); }
+    .state-msg .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: .4; }
+    .spinner {
+      display: inline-block;
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-bottom: 12px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .err { color: #ef4444; }
+    .err-msg { color: var(--danger); }
+
+    /* ── DEBUG BANNER ── */
+    #debug-banner {
+      display: none;
+      background: #fff8e1;
+      border: 1px solid #fbbf24;
+      border-radius: var(--radius-sm);
+      padding: 12px 18px;
+      font-size: .8rem;
+      color: #92400e;
+      line-height: 1.6;
+    }
+    #debug-banner code { background: #fef3c7; padding: 1px 5px; border-radius: 4px; font-size: .75rem; }
+
+    @media(max-width: 640px) {
+      header { padding: 0 16px; }
+      main { padding: 14px 16px; }
+      .filter-top { gap: 8px; }
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>📊 דשבורד לידים – אוריגמי</h1>
+  <div class="header-brand">📊 דשבורד לידים <span>| אוריגמי</span></div>
   <div class="view-toggle">
     <button class="view-btn active" data-view="dashboard">📈 דשבורד</button>
     <button class="view-btn" data-view="tables">📋 טבלאות</button>
@@ -145,46 +363,76 @@
 
 <main>
 
+  <!-- DEBUG BANNER -->
+  <div id="debug-banner"></div>
+
   <!-- FILTERS -->
   <div class="filter-bar">
-    <div class="fg">
-      <label>מתאריך</label>
-      <input type="date" id="f-from" />
-    </div>
-    <div class="fg">
-      <label>עד תאריך</label>
-      <input type="date" id="f-to" />
-    </div>
-    <div class="fg" style="min-width:auto">
-      <label>קיצורי דרך</label>
-      <div class="shortcuts">
-        <button class="sc-btn" data-r="today">היום</button>
-        <button class="sc-btn" data-r="yesterday">אתמול</button>
-        <button class="sc-btn" data-r="week">שבוע</button>
-        <button class="sc-btn" data-r="month">חודש</button>
-        <button class="sc-btn" data-r="year">שנה</button>
-        <button class="sc-btn active" data-r="all">הכל</button>
+    <div class="filter-top">
+
+      <!-- Date range -->
+      <div class="fg">
+        <label>מתאריך</label>
+        <input type="date" id="f-from" />
       </div>
+      <div class="fg">
+        <label>עד תאריך</label>
+        <input type="date" id="f-to" />
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="fg" style="min-width: auto">
+        <label>קיצור מהיר</label>
+        <div class="shortcuts">
+          <button class="sc-btn" data-r="today">היום</button>
+          <button class="sc-btn" data-r="week">שבוע</button>
+          <button class="sc-btn" data-r="month">חודש</button>
+          <button class="sc-btn" data-r="year">שנה</button>
+          <button class="sc-btn active" data-r="all">הכל</button>
+        </div>
+      </div>
+
+      <div class="filter-sep"></div>
+
+      <!-- Responsible -->
+      <div class="fg">
+        <label>נציג אחראי</label>
+        <select id="f-responsible"><option value="">הכל</option></select>
+      </div>
+
+      <!-- Source -->
+      <div class="fg">
+        <label>מקור ליד</label>
+        <select id="f-source"><option value="">הכל</option></select>
+      </div>
+
+      <!-- City -->
+      <div class="fg">
+        <label>עיר</label>
+        <select id="f-city"><option value="">הכל</option></select>
+      </div>
+
+      <!-- Status -->
+      <div class="fg">
+        <label>סטטוס ליד</label>
+        <select id="f-status"><option value="">הכל</option></select>
+      </div>
+
+      <button class="btn-reset" id="btn-reset">↺ איפוס</button>
     </div>
-    <div class="fg">
-      <label>נציג אחראי</label>
-      <select id="f-responsible"><option value="">הכל</option></select>
-    </div>
-    <div class="fg">
-      <label>מקור ליד</label>
-      <select id="f-source"><option value="">הכל</option></select>
-    </div>
-    <div class="fg">
-      <label>עיר</label>
-      <select id="f-city"><option value="">הכל</option></select>
-    </div>
-    <button class="btn-reset" id="btn-reset">↺ איפוס</button>
+
+    <!-- Active filter chips -->
+    <div class="active-chips" id="active-chips"></div>
   </div>
 
   <!-- DASHBOARD VIEW -->
   <div id="view-dashboard">
     <div class="kpi-grid" id="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">טוען...</div><div class="kpi-value">—</div></div>
+      <div class="kpi-card">
+        <div class="kpi-accent"></div>
+        <div class="kpi-label">טוען...</div>
+        <div class="kpi-value">—</div>
+      </div>
     </div>
     <div class="charts-row">
       <div class="chart-card"><h3>לפי נציג אחראי</h3><div class="chart-wrap"><canvas id="chart-responsible"></canvas></div></div>
@@ -196,7 +444,6 @@
 
   <!-- TABLES VIEW -->
   <div id="view-tables">
-    <!-- Pivot 1: by responsible -->
     <div class="pivot-card">
       <div class="pivot-head">
         <h3>לפי נציג אחראי</h3>
@@ -205,7 +452,6 @@
       </div>
       <div class="tbl-wrap"><table id="tbl-responsible"><thead></thead><tbody></tbody></table></div>
     </div>
-    <!-- Pivot 2: by source -->
     <div class="pivot-card">
       <div class="pivot-head">
         <h3>לפי מקור ליד</h3>
@@ -214,7 +460,6 @@
       </div>
       <div class="tbl-wrap"><table id="tbl-source"><thead></thead><tbody></tbody></table></div>
     </div>
-    <!-- Pivot 3: by status -->
     <div class="pivot-card">
       <div class="pivot-head">
         <h3>לפי סטטוס</h3>
@@ -230,24 +475,34 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────
 const S = {
-  all: [], filtered: [],
-  filters: { from:'', to:'', responsible:'', source:'', city:'' },
+  all: [],
+  filtered: [],
+  filters: { from: '', to: '', responsible: '', source: '', city: '', status: '' },
 };
 const CHARTS = {};
-const PAL = ['#4f46e5','#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6','#f97316','#84cc16','#0ea5e9','#a855f7'];
+const PAL = ['#5b52e8','#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6','#f97316','#84cc16','#0ea5e9','#a855f7'];
 
-// ── PARSE ORIGAMI FORMAT ──────────────────────────────────────────
-function parseInstance(inst) {
+// ── PARSING ───────────────────────────────────────────────────────
+function pick(obj, ...keys) {
+  for (const k of keys) {
+    const v = obj[k];
+    if (v !== undefined && v !== null && v !== '') return String(v);
+  }
+  return '';
+}
+
+function parseFieldGroups(inst) {
+  if (!inst) return {};
   const f = {};
   for (const grp of inst.field_groups || []) {
     for (const row of grp.fields_data || []) {
       if (!Array.isArray(row)) continue;
       for (const fld of row) {
-        if (!fld.field_name) continue;
+        if (!fld || !fld.field_name) continue;
         const v = fld.value;
         if (v !== undefined && v !== null && v !== '') {
           f[fld.field_name.trim()] = v;
-          if (fld.field_data_name) f[fld.field_data_name] = v;
+          if (fld.field_data_name) f[fld.field_data_name.trim()] = v;
         }
       }
     }
@@ -255,74 +510,171 @@ function parseInstance(inst) {
   return f;
 }
 
+function mapFields(f) {
+  return {
+    name:        pick(f, 'שם','שם מלא','שם פרטי','שם ושם משפחה','שם הליד','name'),
+    phone:       pick(f, 'טלפון','נייד','פלאפון','מספר טלפון','phone'),
+    city:        pick(f, 'עיר','שם העיר','יישוב','city'),
+    source:      pick(f, 'מקור הגעה','מקור','ספירה של מקור הליד','מקור ליד','source'),
+    responsible: pick(f, 'אחראי מטפל','אחראי','נציג','נציג אחראי','משתמש אחראי','responsible'),
+    status:      pick(f, 'סטטוס ליד','סטטוס','סטטוס של מקור הליד','מצב','מצב ליד','שלב','status'),
+  };
+}
+
 function normalizeLeads(json) {
-  const rows = json.data || [];
-  console.log('שדות ברשומה הראשונה:', rows[0] ? Object.keys(parseInstance(rows[0].instance_data)) : 'אין נתונים');
-  return rows.map((item, i) => {
-    const inst = item.instance_data;
-    const f = parseInstance(inst);
+  const raw = Array.isArray(json.data) ? json.data : [];
+  console.log(`📊 התקבלו ${raw.length} רשומות`);
+
+  if (!raw.length) {
+    console.warn('⚠️ json.data ריק. מפתחות בתגובה:', Object.keys(json));
+    return [];
+  }
+
+  const first = raw[0];
+  const hasWrapper = first && first.instance_data !== undefined;
+  console.log('📋 פורמט:', hasWrapper ? 'instance_data (מקונן)' : 'flat (שטוח)');
+
+  const items = hasWrapper ? raw.map(r => r.instance_data).filter(Boolean) : raw;
+
+  if (items[0]) {
+    const sampleFields = hasWrapper ? parseFieldGroups(items[0]) : items[0];
+    const keys = Object.keys(sampleFields);
+    console.log('🔑 שדות זמינים:', keys);
+    const sample = mapFields(sampleFields);
+    const mapped = Object.entries(sample).filter(([,v]) => v).map(([k]) => k);
+    if (!mapped.length) {
+      showDebug(keys);
+    }
+  }
+
+  return items.map((inst, i) => {
+    const f = hasWrapper ? parseFieldGroups(inst) : inst;
+    const ts = inst?.insertTimestamp ?? inst?.created_at ?? inst?.createdAt ?? '';
     return {
-      id:          inst._id ?? i,
-      date:        inst.insertTimestamp?.slice(0,10) ?? '',
-      name:        f['שם'] ?? f['שם מלא'] ?? f['שם פרטי'] ?? f['שם ושם משפחה'] ?? f['שם הליד'] ?? '',
-      phone:       f['טלפון'] ?? f['נייד'] ?? f['פלאפון'] ?? f['מספר טלפון'] ?? '',
-      city:        f['עיר'] ?? f['שם העיר'] ?? f['יישוב'] ?? '',
-      source:      f['מקור הגעה'] ?? f['מקור'] ?? f['ספירה של מקור הליד'] ?? f['מקור ליד'] ?? '',
-      responsible: f['אחראי מטפל'] ?? f['אחראי'] ?? f['נציג'] ?? f['נציג אחראי'] ?? f['משתמש אחראי'] ?? '',
-      status:      f['סטטוס ליד'] ?? f['סטטוס'] ?? f['סטטוס של מקור הליד'] ?? f['מצב'] ?? '',
-      raw: f,
+      id:   inst?._id ?? i,
+      date: ts.slice(0, 10),
+      ...mapFields(f),
+      raw:  f,
     };
   });
 }
 
-// ── LOAD ──────────────────────────────────────────────────────────
+function showDebug(availableKeys) {
+  const el = document.getElementById('debug-banner');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <strong>⚠️ אזהרת אבחון:</strong> הנתונים נטענו אך שמות השדות לא תואמים.
+    השדות שהגיעו מהשרת: ${availableKeys.map(k => `<code>${k}</code>`).join(' ')}
+    <br>נא לעדכן את מיפוי השדות ב-<code>mapFields()</code> בקוד כדי להתאים לשמות אלו.
+  `;
+}
+
+// ── LOAD ─────────────────────────────────────────────────────────
 async function loadData() {
-  setLoading(true);
+  showLoading();
   try {
     const res = await fetch('/api/leads');
     if (!res.ok) throw new Error(`שגיאת שרת ${res.status}`);
     const json = await res.json();
+    if (json.error) throw new Error(json.error);
     S.all = normalizeLeads(json);
     populateFilters();
     applyFilters();
     document.getElementById('last-updated').textContent = `עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
-  } catch(e) {
-    document.getElementById('kpi-grid').innerHTML = `<div class="state-msg err">שגיאה: ${e.message}</div>`;
-  } finally {
-    setLoading(false);
+  } catch (e) {
+    document.getElementById('kpi-grid').innerHTML = `
+      <div class="state-msg err-msg">
+        <span class="icon">⚠️</span>
+        שגיאה: ${esc(e.message)}
+      </div>`;
+    console.error(e);
   }
 }
 
-function setLoading(v) {
-  if (v) document.getElementById('kpi-grid').innerHTML = `<div class="state-msg"><div class="spinner"></div><br>טוען נתונים...</div>`;
+function showLoading() {
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="state-msg">
+      <div class="spinner"></div>
+      <div>טוען נתונים...</div>
+    </div>`;
 }
 
-// ── FILTERS ───────────────────────────────────────────────────────
+// ── FILTERS ──────────────────────────────────────────────────────
 function populateFilters() {
-  const u = k => [...new Set(S.all.map(l=>l[k]).filter(Boolean))].sort();
-  fill('f-responsible', u('responsible'));
-  fill('f-source',      u('source'));
-  fill('f-city',        u('city'));
+  const uniq = k => [...new Set(S.all.map(l => l[k]).filter(Boolean))].sort();
+  fill('f-responsible', uniq('responsible'));
+  fill('f-source',      uniq('source'));
+  fill('f-city',        uniq('city'));
+  fill('f-status',      uniq('status'));
 }
+
 function fill(id, vals) {
   const el = document.getElementById(id);
   const cur = el.value;
-  el.innerHTML = '<option value="">הכל</option>' + vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  el.innerHTML = '<option value="">הכל</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
   if (cur) el.value = cur;
 }
 
 function applyFilters() {
-  const {from, to, responsible, source, city} = S.filters;
+  const { from, to, responsible, source, city, status } = S.filters;
   S.filtered = S.all.filter(l => {
-    if (from && l.date < from) return false;
-    if (to   && l.date > to)   return false;
+    if (from        && l.date        < from)        return false;
+    if (to          && l.date        > to)          return false;
     if (responsible && l.responsible !== responsible) return false;
     if (source      && l.source      !== source)      return false;
-    if (city        && l.city        !== city)         return false;
+    if (city        && l.city        !== city)        return false;
+    if (status      && l.status      !== status)      return false;
     return true;
   });
+  renderChips();
   renderDashboard();
   renderAllPivots();
+}
+
+// ── CHIPS ─────────────────────────────────────────────────────────
+const CHIP_LABELS = {
+  responsible: 'נציג', source: 'מקור', city: 'עיר', status: 'סטטוס',
+  from: 'מ-', to: 'עד '
+};
+function renderChips() {
+  const el = document.getElementById('active-chips');
+  const chips = [];
+  for (const [k, v] of Object.entries(S.filters)) {
+    if (!v || k === 'from' || k === 'to') continue;
+    chips.push(`<div class="chip">
+      <div class="chip-x" onclick="clearFilter('${k}')">✕</div>
+      ${CHIP_LABELS[k]}: ${esc(v)}
+    </div>`);
+  }
+  if (S.filters.from || S.filters.to) {
+    const range = [S.filters.from ? `מ-${S.filters.from}` : '', S.filters.to ? `עד ${S.filters.to}` : ''].filter(Boolean).join(' ');
+    chips.push(`<div class="chip">
+      <div class="chip-x" onclick="clearDateFilter()">✕</div>
+      ${esc(range)}
+    </div>`);
+  }
+  el.innerHTML = chips.join('');
+  // Mark selects with values
+  ['f-responsible','f-source','f-city','f-status','f-from','f-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('has-value', !!el.value);
+  });
+}
+
+function clearFilter(k) {
+  S.filters[k] = '';
+  const elMap = { responsible:'f-responsible', source:'f-source', city:'f-city', status:'f-status' };
+  if (elMap[k]) document.getElementById(elMap[k]).value = '';
+  applyFilters();
+}
+function clearDateFilter() {
+  S.filters.from = ''; S.filters.to = '';
+  document.getElementById('f-from').value = '';
+  document.getElementById('f-to').value = '';
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-r="all"]').classList.add('active');
+  applyFilters();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -330,100 +682,153 @@ function renderDashboard() {
   const leads = S.filtered;
   const total = leads.length;
   const byStatus = groupBy(leads, 'status');
-  const colors = PAL;
 
   const kpis = [
-    { label: 'סה״כ לידים', val: total, color: '#4f46e5' },
-    ...Object.entries(byStatus).map(([s,n],i) => ({ label: s||'ללא סטטוס', val: n, color: colors[(i+1)%colors.length] }))
+    { label: 'סה״כ לידים', val: total, color: PAL[0] },
+    ...Object.entries(byStatus).map(([s, n], i) => ({
+      label: s || 'ללא סטטוס',
+      val: n,
+      color: PAL[(i + 1) % PAL.length],
+    })),
   ];
 
   document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
     <div class="kpi-card" style="--kc:${k.color}">
+      <div class="kpi-accent"></div>
       <div class="kpi-label">${esc(k.label)}</div>
       <div class="kpi-value">${k.val}</div>
-      <div class="kpi-pct">${total&&k.label!=='סה״כ לידים' ? Math.round(k.val/total*100)+'%' : ''}</div>
+      <div class="kpi-pct">${total && k.label !== 'סה״כ לידים' ? Math.round(k.val / total * 100) + '%' : '&nbsp;'}</div>
     </div>`).join('');
 
-  renderBar('chart-responsible', groupBy(leads,'responsible'));
-  renderBar('chart-source',      groupBy(leads,'source'));
-  renderBar('chart-city',        groupBy(leads,'city'));
-  renderDoughnut('chart-status', groupBy(leads,'status'));
+  renderBar('chart-responsible', groupBy(leads, 'responsible'));
+  renderBar('chart-source',      groupBy(leads, 'source'));
+  renderBar('chart-city',        groupBy(leads, 'city'));
+  renderDoughnut('chart-status', byStatus);
 }
 
 function groupBy(arr, key) {
-  return arr.reduce((a,l) => { const v=l[key]||'ללא'; a[v]=(a[v]||0)+1; return a; }, {});
+  const out = {};
+  for (const l of arr) {
+    const v = l[key] || 'ללא';
+    out[v] = (out[v] || 0) + 1;
+  }
+  return out;
 }
 
 function renderBar(id, data) {
   const labels = Object.keys(data), values = Object.values(data);
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
   if (CHARTS[id]) CHARTS[id].destroy();
-  CHARTS[id] = new Chart(document.getElementById(id).getContext('2d'), {
+  if (!labels.length) {
+    canvas.parentElement.innerHTML = '<div class="state-msg"><span class="icon">📭</span>אין נתונים</div>';
+    return;
+  }
+  CHARTS[id] = new Chart(canvas.getContext('2d'), {
     type: 'bar',
-    data: { labels, datasets: [{ data: values, backgroundColor: PAL.slice(0,labels.length), borderRadius: 6, borderSkipped: false }] },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#f1f5f9'}} } }
-  });
-}
-function renderDoughnut(id, data) {
-  const labels = Object.keys(data), values = Object.values(data);
-  if (CHARTS[id]) CHARTS[id].destroy();
-  CHARTS[id] = new Chart(document.getElementById(id).getContext('2d'), {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: PAL.slice(0,labels.length), borderWidth:2, borderColor:'#fff' }] },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{size:11}, padding:10 } } }, cutout:'60%' }
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: PAL.slice(0, labels.length).map(c => c + 'cc'),
+        borderColor: PAL.slice(0, labels.length),
+        borderWidth: 1.5,
+        borderRadius: 7,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#9ca3af' } },
+        y: { beginAtZero: true, ticks: { precision: 0, color: '#9ca3af', font: { size: 11 } }, grid: { color: '#f3f4f6' } },
+      },
+    },
   });
 }
 
-// ── PIVOT TABLES ──────────────────────────────────────────────────
+function renderDoughnut(id, data) {
+  const labels = Object.keys(data), values = Object.values(data);
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  if (CHARTS[id]) CHARTS[id].destroy();
+  if (!labels.length) {
+    canvas.parentElement.innerHTML = '<div class="state-msg"><span class="icon">📭</span>אין נתונים</div>';
+    return;
+  }
+  CHARTS[id] = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: PAL.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 8,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 11 }, padding: 12, color: '#374151' } },
+      },
+      cutout: '62%',
+    },
+  });
+}
+
+// ── PIVOTS ────────────────────────────────────────────────────────
 function renderAllPivots() {
   renderPivot('responsible', 'נציג אחראי', 'status');
   renderPivot('source',      'מקור ליד',   'status');
-  renderPivot('status',      'סטטוס',       'responsible');
+  renderPivot('status',      'סטטוס',      'responsible');
 }
 
 function renderPivot(rowKey, rowLabel, colKey) {
   const leads = S.filtered;
-  const tbl = document.getElementById('tbl-'+rowKey);
-  const badge = document.getElementById('badge-'+rowKey);
-
-  const rows = [...new Set(leads.map(l=>l[rowKey]).filter(Boolean))].sort();
-  const cols = [...new Set(leads.map(l=>l[colKey]).filter(Boolean))].sort();
-
+  const tbl = document.getElementById('tbl-' + rowKey);
+  const badge = document.getElementById('badge-' + rowKey);
   badge.textContent = `${leads.length} לידים`;
+
+  const rows = [...new Set(leads.map(l => l[rowKey]).filter(Boolean))].sort();
+  const cols = [...new Set(leads.map(l => l[colKey]).filter(Boolean))].sort();
 
   if (!leads.length) {
     tbl.querySelector('thead').innerHTML = '';
-    tbl.querySelector('tbody').innerHTML = `<tr><td colspan="3"><div class="state-msg">אין נתונים</div></td></tr>`;
+    tbl.querySelector('tbody').innerHTML = `<tr><td colspan="3"><div class="state-msg"><span class="icon">📭</span>אין נתונים</div></td></tr>`;
     return;
   }
 
-  // Head
   tbl.querySelector('thead').innerHTML = `<tr>
-    <th>${rowLabel}</th>
-    ${cols.map(c=>`<th class="num">${esc(c)}</th>`).join('')}
+    <th>${esc(rowLabel)}</th>
+    ${cols.map(c => `<th class="num">${esc(c)}</th>`).join('')}
     <th class="num total-col">סה״כ</th>
   </tr>`;
 
-  // Body
   const grandTotals = {};
-  cols.forEach(c => grandTotals[c]=0);
+  cols.forEach(c => { grandTotals[c] = 0; });
   let grandTotal = 0;
 
   const bodyRows = rows.map(rowVal => {
-    const rowLeads = leads.filter(l=>l[rowKey]===rowVal);
+    const sub = leads.filter(l => l[rowKey] === rowVal);
     const counts = {};
-    cols.forEach(c => { counts[c]=rowLeads.filter(l=>l[colKey]===c).length; grandTotals[c]+=counts[c]; });
-    const rowTotal = rowLeads.length;
+    cols.forEach(c => { counts[c] = sub.filter(l => l[colKey] === c).length; grandTotals[c] += counts[c]; });
+    const rowTotal = sub.length;
     grandTotal += rowTotal;
     return `<tr>
       <td class="row-name">${esc(rowVal)}</td>
-      ${cols.map(c=>`<td class="num">${counts[c]>0?`<strong>${counts[c]}</strong>`:`<span class="zero">—</span>`}</td>`).join('')}
+      ${cols.map(c => `<td class="num">${counts[c] > 0 ? `<strong>${counts[c]}</strong>` : '<span class="zero">—</span>'}</td>`).join('')}
       <td class="num total-col">${rowTotal}</td>
     </tr>`;
   });
 
   const totalRow = `<tr class="total-row">
     <td>סה״כ</td>
-    ${cols.map(c=>`<td class="num">${grandTotals[c]}</td>`).join('')}
+    ${cols.map(c => `<td class="num">${grandTotals[c]}</td>`).join('')}
     <td class="num total-col">${grandTotal}</td>
   </tr>`;
 
@@ -432,57 +837,80 @@ function renderPivot(rowKey, rowLabel, colKey) {
 
 // ── EXPORT ────────────────────────────────────────────────────────
 function exportPivot(key) {
-  const tbl = document.getElementById('tbl-'+key);
+  const tbl = document.getElementById('tbl-' + key);
   const rows = [...tbl.querySelectorAll('tr')].map(tr =>
-    [...tr.querySelectorAll('th,td')].map(td => `"${td.innerText.trim().replace(/"/g,'""')}"`).join(',')
+    [...tr.querySelectorAll('th,td')].map(td => `"${td.innerText.trim().replace(/"/g, '""')}"`).join(',')
   );
   const bom = '﻿';
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([bom+rows.join('\r\n')], {type:'text/csv'}));
+  a.href = URL.createObjectURL(new Blob([bom + rows.join('\r\n')], { type: 'text/csv' }));
   a.download = `pivot_${key}.csv`;
   a.click();
 }
 
 // ── DATE SHORTCUTS ────────────────────────────────────────────────
 function setRange(r) {
-  const t = new Date(), fmt = d=>d.toISOString().slice(0,10);
-  let from='', to='';
-  if (r==='today')     { from=to=fmt(t); }
-  else if (r==='yesterday') { const y=new Date(t); y.setDate(y.getDate()-1); from=to=fmt(y); }
-  else if (r==='week') { const w=new Date(t); w.setDate(w.getDate()-6); from=fmt(w); to=fmt(t); }
-  else if (r==='month') { const m=new Date(t); m.setDate(1); from=fmt(m); to=fmt(t); }
-  else if (r==='year') { from=`${t.getFullYear()}-01-01`; to=fmt(t); }
-  document.getElementById('f-from').value=from;
-  document.getElementById('f-to').value=to;
-  S.filters.from=from; S.filters.to=to;
-  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  const t = new Date();
+  const fmt = d => d.toISOString().slice(0, 10);
+  let from = '', to = '';
+  if (r === 'today') {
+    from = to = fmt(t);
+  } else if (r === 'week') {
+    const w = new Date(t); w.setDate(w.getDate() - 6);
+    from = fmt(w); to = fmt(t);
+  } else if (r === 'month') {
+    const m = new Date(t.getFullYear(), t.getMonth(), 1);
+    from = fmt(m); to = fmt(t);
+  } else if (r === 'year') {
+    from = `${t.getFullYear()}-01-01`; to = fmt(t);
+  }
+  document.getElementById('f-from').value = from;
+  document.getElementById('f-to').value = to;
+  S.filters.from = from; S.filters.to = to;
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-r="${r}"]`)?.classList.add('active');
   applyFilters();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────
-function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 // ── EVENTS ────────────────────────────────────────────────────────
-document.getElementById('f-from').addEventListener('change', e=>{ S.filters.from=e.target.value; document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
-document.getElementById('f-to').addEventListener('change',   e=>{ S.filters.to=e.target.value;   document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
-document.getElementById('f-responsible').addEventListener('change', e=>{ S.filters.responsible=e.target.value; applyFilters(); });
-document.getElementById('f-source').addEventListener('change',      e=>{ S.filters.source=e.target.value;      applyFilters(); });
-document.getElementById('f-city').addEventListener('change',        e=>{ S.filters.city=e.target.value;        applyFilters(); });
-document.getElementById('btn-reset').addEventListener('click', ()=>{
-  ['f-from','f-to','f-responsible','f-source','f-city'].forEach(id=>document.getElementById(id).value='');
-  S.filters={from:'',to:'',responsible:'',source:'',city:''};
-  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById('f-from').addEventListener('change', e => {
+  S.filters.from = e.target.value;
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
+  applyFilters();
+});
+document.getElementById('f-to').addEventListener('change', e => {
+  S.filters.to = e.target.value;
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
+  applyFilters();
+});
+document.getElementById('f-responsible').addEventListener('change', e => { S.filters.responsible = e.target.value; applyFilters(); });
+document.getElementById('f-source').addEventListener('change',      e => { S.filters.source      = e.target.value; applyFilters(); });
+document.getElementById('f-city').addEventListener('change',        e => { S.filters.city        = e.target.value; applyFilters(); });
+document.getElementById('f-status').addEventListener('change',      e => { S.filters.status      = e.target.value; applyFilters(); });
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  ['f-from','f-to','f-responsible','f-source','f-city','f-status'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  S.filters = { from: '', to: '', responsible: '', source: '', city: '', status: '' };
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('[data-r="all"]').classList.add('active');
   applyFilters();
 });
-document.querySelectorAll('.sc-btn').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.r)));
-document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', ()=>{
-  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+
+document.querySelectorAll('.sc-btn').forEach(b => b.addEventListener('click', () => setRange(b.dataset.r)));
+
+document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const v = btn.dataset.view;
-  document.getElementById('view-dashboard').style.display = v==='dashboard' ? 'flex' : 'none';
-  document.getElementById('view-tables').style.display    = v==='tables'    ? 'flex' : 'none';
+  document.getElementById('view-dashboard').style.display = v === 'dashboard' ? 'flex' : 'none';
+  document.getElementById('view-tables').style.display    = v === 'tables'    ? 'flex' : 'none';
 }));
 
 loadData();
