@@ -523,7 +523,6 @@ function parseFieldGroups(inst) {
         if (Array.isArray(v) && v.length > 0 && v[0]?.text !== undefined) v = v.map(x => x.text).join(', ');
         if (v !== undefined && v !== null && v !== '') {
           f[fld.field_name.trim()] = v;
-          if (fld.field_data_name) f[fld.field_data_name.trim()] = v;
         }
       }
     }
@@ -542,9 +541,9 @@ function mapFields(f) {
     name,
     phone:       pick(f, 'נייד','טלפון','טלפון בית','פלאפון','מספר טלפון'),
     city:        pick(f, 'עיר','שם העיר','יישוב'),
-    source:      pick(f, 'מקור הליד','מקור הגעה','מקור','מקור ליד'),
-    responsible: pick(f, 'אחראי מטפל','נציג אחראי','משתמש אחראי'),
-    status:      pick(f, 'סטטוס ליד','סטטוס'),
+    source:      pick(f, 'מקור הליד'),
+    responsible: pick(f, 'אחראי מטפל'),
+    status:      pick(f, 'סטטוס ליד'),
   };
 }
 
