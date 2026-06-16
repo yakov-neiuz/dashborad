@@ -747,12 +747,15 @@ function renderPivot(rowKey, rowLabel, colKey) {
   const leads = S.filtered;
   const tbl   = document.getElementById('tbl-'+rowKey);
   document.getElementById('badge-'+rowKey).textContent = `${leads.length} לידים`;
-  const rows = ALL_OPTIONS[rowKey]?.length
-    ? ALL_OPTIONS[rowKey]
-    : [...new Set(leads.map(l=>l[rowKey]).filter(Boolean))].sort();
-  const cols = ALL_OPTIONS[colKey]?.length
-    ? ALL_OPTIONS[colKey]
-    : [...new Set(leads.map(l=>l[colKey]).filter(Boolean))].sort();
+  // When a filter is active on a dimension → show only the selected values.
+  // Otherwise show all known options (so rows/cols appear even with zero leads).
+  const dimValues = (key) => {
+    if (S.filters[key]?.length) return [...S.filters[key]].sort();
+    if (ALL_OPTIONS[key]?.length) return ALL_OPTIONS[key];
+    return [...new Set(leads.map(l=>l[key]).filter(Boolean))].sort();
+  };
+  const rows = dimValues(rowKey);
+  const cols = dimValues(colKey);
   if (!leads.length) {
     tbl.querySelector('thead').innerHTML='';
     tbl.querySelector('tbody').innerHTML=`<tr><td colspan="3"><div class="state-msg"><span class="icon">📭</span>אין נתונים</div></td></tr>`;
