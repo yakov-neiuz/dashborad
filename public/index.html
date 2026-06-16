@@ -746,12 +746,18 @@ function renderPivot(rowKey, rowLabel, colKey) {
   const leads = S.filtered;
   const tbl   = document.getElementById('tbl-'+rowKey);
   document.getElementById('badge-'+rowKey).textContent = `${leads.length} לידים`;
-  // When a filter is active on a dimension → show only the selected values.
-  // Otherwise show all known options (so rows/cols appear even with zero leads).
+  // Row/col values:
+  //  - dimension is itself filtered  → only the selected values
+  //  - any other filter is active    → only values present in the filtered leads
+  //  - no filters at all             → full list of all known options
+  const anyFilter = S.filters.from || S.filters.to ||
+    S.filters.responsible.length || S.filters.source.length ||
+    S.filters.city.length || S.filters.status.length;
+  const present = (key) => [...new Set(leads.map(l=>l[key]).filter(Boolean))].sort();
   const dimValues = (key) => {
     if (S.filters[key]?.length) return [...S.filters[key]].sort();
-    if (ALL_OPTIONS[key]?.length) return ALL_OPTIONS[key];
-    return [...new Set(leads.map(l=>l[key]).filter(Boolean))].sort();
+    if (anyFilter) return present(key);
+    return ALL_OPTIONS[key]?.length ? ALL_OPTIONS[key] : present(key);
   };
   const rows = dimValues(rowKey);
   const cols = dimValues(colKey);
