@@ -551,8 +551,10 @@ function normalizeLeads(json) {
   const raw = Array.isArray(json.data) ? json.data : [];
   if (!raw.length) { console.warn('אין רשומות ב-json.data', Object.keys(json)); return []; }
   const hasWrapper = raw[0]?.instance_data !== undefined;
-  const items = hasWrapper ? raw.map(r => r.instance_data).filter(Boolean) : raw;
-  console.log(`📊 ${items.length} רשומות | פורמט: ${hasWrapper ? 'instance_data' : 'flat'}`);
+  const items = (hasWrapper ? raw.map(r => r.instance_data).filter(Boolean) : raw)
+    // Skip archived/deleted leads — Origami's API still returns them
+    .filter(inst => inst.archived !== true && inst.archived !== 'true' && inst.archived !== 1);
+  console.log(`📊 ${items.length} רשומות פעילות | פורמט: ${hasWrapper ? 'instance_data' : 'flat'}`);
   if (items[0]) console.log('🔑 שדות:', Object.keys(hasWrapper ? parseFieldGroups(items[0]) : items[0]));
   return items.map((inst, i) => {
     const f = hasWrapper ? parseFieldGroups(inst) : inst;
