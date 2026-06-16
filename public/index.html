@@ -256,6 +256,14 @@
   <div class="filter-bar">
     <div class="filter-top">
 
+      <div class="fg-sc">
+        <label>סינון תאריך לפי</label>
+        <div class="shortcuts">
+          <button class="sc-btn db-btn active" data-db="entry">כניסת ליד</button>
+          <button class="sc-btn db-btn" data-db="close">סגירת ליד</button>
+        </div>
+      </div>
+
       <div class="fg">
         <label>מתאריך</label>
         <input type="date" id="f-from" />
@@ -386,7 +394,7 @@
 // ── STATE ─────────────────────────────────────────────────────────
 const S = {
   all: [], filtered: [],
-  filters: { from: '', to: '', responsible: [], source: [], city: [], status: [] },
+  filters: { from: '', to: '', dateBasis: 'entry', responsible: [], source: [], city: [], status: [] },
 };
 const ALL_OPTIONS = { responsible: [], source: [], city: [], status: [] };
 const CHARTS = {};
@@ -561,8 +569,21 @@ function normalizeLeads(json) {
   return items.map((inst, i) => {
     const f = hasWrapper ? parseFieldGroups(inst) : inst;
     const ts = inst?.insertTimestamp ?? inst?.created_at ?? '';
-    return { id: inst?._id ?? i, date: ts.slice(0,10), ...mapFields(f), raw: f };
+    const entryDate = ts.slice(0,10);
+    const closeDate = toISODate(f['תאריך סגירת הליד']);
+    return { id: inst?._id ?? i, date: entryDate, entryDate, closeDate, ...mapFields(f), raw: f };
   });
+}
+
+// Convert a date string to YYYY-MM-DD. Handles DD/MM/YYYY (Origami) and ISO.
+function toISODate(val) {
+  if (!val) return '';
+  const s = String(val).trim();
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  const iso = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (iso) return iso[1];
+  return '';
 }
 
 // ── LOAD ─────────────────────────────────────────────────────────
@@ -609,10 +630,11 @@ function populateFilters() {
 }
 
 function applyFilters() {
-  const { from, to, responsible, source, city, status } = S.filters;
+  const { from, to, dateBasis, responsible, source, city, status } = S.filters;
   S.filtered = S.all.filter(l => {
-    if (from && l.date < from) return false;
-    if (to   && l.date > to)   return false;
+    const d = dateBasis === 'close' ? l.closeDate : l.entryDate;
+    if (from && (!d || d < from)) return false;
+    if (to   && (!d || d > to))   return false;
     if (responsible.length && !responsible.includes(l.responsible)) return false;
     if (source.length      && !source.includes(l.source))           return false;
     if (city.length        && !city.includes(l.city))               return false;
@@ -653,7 +675,7 @@ function clearDate() {
   S.filters.from = ''; S.filters.to = '';
   document.getElementById('f-from').value = '';
   document.getElementById('f-to').value = '';
-  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sc-btn[data-r]').forEach(b => b.classList.remove('active'));
   document.querySelector('[data-r="all"]').classList.add('active');
   applyFilters();
 }
@@ -914,18 +936,19 @@ function setRange(r) {
   document.getElementById('f-from').value=from;
   document.getElementById('f-to').value=to;
   S.filters.from=from; S.filters.to=to;
-  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sc-btn[data-r]').forEach(b=>b.classList.remove('active'));
   document.querySelector(`[data-r="${r}"]`)?.classList.add('active');
   applyFilters();
 }
 
 function resetAll() {
-  S.filters={ from:'', to:'', responsible:[], source:[], city:[], status:[] };
+  S.filters={ from:'', to:'', dateBasis:'entry', responsible:[], source:[], city:[], status:[] };
   document.getElementById('f-from').value='';
   document.getElementById('f-to').value='';
   Object.values(MS).forEach(ms=>ms.clear());
-  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sc-btn[data-r]').forEach(b=>b.classList.remove('active'));
   document.querySelector('[data-r="all"]').classList.add('active');
+  document.querySelectorAll('.db-btn').forEach(b=>b.classList.toggle('active', b.dataset.db==='entry'));
   applyFilters();
 }
 
@@ -933,10 +956,16 @@ function resetAll() {
 function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── EVENTS ────────────────────────────────────────────────────────
-document.getElementById('f-from').addEventListener('change', e=>{ S.filters.from=e.target.value; document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
-document.getElementById('f-to').addEventListener('change',   e=>{ S.filters.to=e.target.value;   document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active')); applyFilters(); });
+document.getElementById('f-from').addEventListener('change', e=>{ S.filters.from=e.target.value; document.querySelectorAll('.sc-btn[data-r]').forEach(b=>b.classList.remove('active')); applyFilters(); });
+document.getElementById('f-to').addEventListener('change',   e=>{ S.filters.to=e.target.value;   document.querySelectorAll('.sc-btn[data-r]').forEach(b=>b.classList.remove('active')); applyFilters(); });
 document.getElementById('btn-reset').addEventListener('click', resetAll);
-document.querySelectorAll('.sc-btn').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.r)));
+document.querySelectorAll('.sc-btn[data-r]').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.r)));
+document.querySelectorAll('.db-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.db-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  S.filters.dateBasis=b.dataset.db;
+  applyFilters();
+}));
 document.querySelectorAll('.view-btn').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
