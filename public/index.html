@@ -739,11 +739,80 @@ function renderDoughnut(id, data) {
 }
 
 // ── PIVOTS ────────────────────────────────────────────────────────
+// Status groups for the responsibles performance table
+const STATUS_GROUPS = {
+  notInterested: { label: 'סה״כ לא מעוניין', color: '#ef4444', statuses: ['חדש','אין מענה','לא רלוונטי','מעוניינת בתקופה אחרת'] },
+  inProgress:    { label: 'סה״כ המשך טיפול', color: '#f59e0b', statuses: ['מתלבטת חמה','מתלבטת קרה','המשך טיפול'] },
+  registered:    { label: 'סה״כ נרשם',       color: '#10b981', statuses: ['נרשם','נרשם ללא אמצעי תשלום'] },
+};
+// Conversion ratio → 2 decimals, 0% when denominator is 0
+const fmtPct = (num, den) => (!den ? '0.00%' : (num / den * 100).toFixed(2) + '%');
+
 function renderAllPivots() {
-  renderPivot('responsible','נציג אחראי','status');
+  renderResponsiblesPivot();
   renderPivot('source','מקור ליד','status');
   renderPivot('city','עיר','status');
   renderRawTable();
+}
+
+// Dimension row/col values shared with renderPivot (respects active filters)
+function pivotDimValues(leads, key) {
+  const anyFilter = S.filters.from || S.filters.to ||
+    S.filters.responsible.length || S.filters.source.length ||
+    S.filters.city.length || S.filters.status.length;
+  const present = [...new Set(leads.map(l=>l[key]).filter(Boolean))].sort();
+  if (S.filters[key]?.length) return [...S.filters[key]].sort();
+  if (anyFilter) return present;
+  return ALL_OPTIONS[key]?.length ? ALL_OPTIONS[key] : present;
+}
+
+function renderResponsiblesPivot() {
+  const leads = S.filtered;
+  const tbl = document.getElementById('tbl-responsible');
+  document.getElementById('badge-responsible').textContent = `${leads.length} לידים`;
+  const rows = pivotDimValues(leads, 'responsible');
+  const cols = pivotDimValues(leads, 'status');
+  if (!leads.length) {
+    tbl.querySelector('thead').innerHTML='';
+    tbl.querySelector('tbody').innerHTML=`<tr><td colspan="3"><div class="state-msg"><span class="icon">📭</span>אין נתונים</div></td></tr>`;
+    return;
+  }
+  const G = STATUS_GROUPS;
+  const groupHead = Object.values(G).map(g=>`<th class="num" style="color:${g.color}">${esc(g.label)}</th>`).join('');
+  const convHead =
+    `<th class="num" style="color:var(--primary);background:var(--primary-light)">% נרשם<br>מתוך לא מעוניין</th>` +
+    `<th class="num" style="color:var(--primary);background:var(--primary-light)">% נרשם<br>מתוך לא מעוניין + המשך</th>`;
+  tbl.querySelector('thead').innerHTML =
+    `<tr><th>נציג אחראי</th>${cols.map((c,i)=>`<th class="num" style="color:${PAL[i%PAL.length]}">${esc(c)}</th>`).join('')}<th class="num total-col">סה״כ</th>${groupHead}${convHead}</tr>`;
+
+  const grandTotals={}; cols.forEach(c=>{grandTotals[c]=0;});
+  let grand=0, gNI=0, gIP=0, gREG=0;
+  const cnt = (sub, statuses) => sub.filter(l=>statuses.includes(l.status)).length;
+
+  const bodyRows = rows.map(rv=>{
+    const sub = leads.filter(l=>l.responsible===rv);
+    const counts={}; cols.forEach(c=>{counts[c]=sub.filter(l=>l.status===c).length; grandTotals[c]+=counts[c];});
+    const ni = cnt(sub, G.notInterested.statuses);
+    const ip = cnt(sub, G.inProgress.statuses);
+    const reg= cnt(sub, G.registered.statuses);
+    const rowTotal=sub.length;
+    grand+=rowTotal; gNI+=ni; gIP+=ip; gREG+=reg;
+    return {rv, counts, rowTotal, ni, ip, reg};
+  });
+
+  const gcell = (v,color) => `<td class="num">${v>0?`<strong style="color:${color}">${v}</strong>`:'<span class="zero">—</span>'}</td>`;
+  const pcell = (txt) => `<td class="num" style="background:var(--primary-light);color:var(--primary);font-weight:700">${txt}</td>`;
+
+  tbl.querySelector('tbody').innerHTML = bodyRows.map(({rv,counts,rowTotal,ni,ip,reg})=>`<tr>
+    <td class="row-name">${esc(rv)}</td>
+    ${cols.map(c=>{const v=counts[c]; return `<td class="num">${v>0?`<strong>${v}</strong>`:'<span class="zero">—</span>'}</td>`;}).join('')}
+    <td class="num total-col"><strong>${rowTotal}</strong></td>
+    ${gcell(ni,G.notInterested.color)}${gcell(ip,G.inProgress.color)}${gcell(reg,G.registered.color)}
+    ${pcell(fmtPct(reg, ni))}${pcell(fmtPct(reg, ni+ip))}
+  </tr>`).join('')
+  + `<tr class="total-row"><td>סה״כ</td>${cols.map(c=>`<td class="num">${grandTotals[c]}</td>`).join('')}<td class="num total-col"><strong>${grand}</strong></td>`
+  + `<td class="num"><strong>${gNI}</strong></td><td class="num"><strong>${gIP}</strong></td><td class="num"><strong>${gREG}</strong></td>`
+  + `<td class="num">${fmtPct(gREG, gNI)}</td><td class="num">${fmtPct(gREG, gNI+gIP)}</td></tr>`;
 }
 
 function renderPivot(rowKey, rowLabel, colKey) {
