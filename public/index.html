@@ -386,6 +386,7 @@ const S = {
   all: [], filtered: [],
   filters: { from: '', to: '', responsible: [], source: [], city: [], status: [] },
 };
+const ALL_OPTIONS = { responsible: [], source: [], city: [], status: [] };
 const CHARTS = {};
 const PAL = ['#2d2b72','#4338ca','#7c3aed','#c084fc','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#0ea5e9','#84cc16','#f97316','#14b8a6'];
 
@@ -542,8 +543,8 @@ function mapFields(f) {
     phone:       pick(f, 'נייד','טלפון','טלפון בית','פלאפון','מספר טלפון'),
     city:        pick(f, 'עיר','שם העיר','יישוב'),
     source:      pick(f, 'מקור הליד','מקור הגעה','מקור','מקור ליד'),
-    responsible: pick(f, 'אחראי מטפל','אחראי','נציג','נציג אחראי','משתמש אחראי'),
-    status:      pick(f, 'סטטוס ליד','סטטוס','מצב','מצב ליד','שלב'),
+    responsible: pick(f, 'אחראי מטפל','נציג אחראי','משתמש אחראי'),
+    status:      pick(f, 'סטטוס ליד','סטטוס'),
   };
 }
 
@@ -578,14 +579,17 @@ async function loadData() {
     if (optionsRes.ok) {
       const opts = await optionsRes.json();
       if (!opts.error) {
-        MS.city.setOptions(opts.cities       || []);
-        MS.source.setOptions(opts.sources    || []);
-        MS.responsible.setOptions(opts.responsibles || []);
+        ALL_OPTIONS.city        = opts.cities        || [];
+        ALL_OPTIONS.source      = opts.sources       || [];
+        ALL_OPTIONS.responsible = opts.responsibles  || [];
+        MS.city.setOptions(ALL_OPTIONS.city);
+        MS.source.setOptions(ALL_OPTIONS.source);
+        MS.responsible.setOptions(ALL_OPTIONS.responsible);
       }
     }
     // Status always from actual lead data
-    const uniqStatus = [...new Set(S.all.map(l => l.status).filter(Boolean))].sort();
-    MS.status.setOptions(uniqStatus);
+    ALL_OPTIONS.status = [...new Set(S.all.map(l => l.status).filter(Boolean))].sort();
+    MS.status.setOptions(ALL_OPTIONS.status);
 
     applyFilters();
     document.getElementById('last-updated').textContent = `עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
@@ -743,8 +747,12 @@ function renderPivot(rowKey, rowLabel, colKey) {
   const leads = S.filtered;
   const tbl   = document.getElementById('tbl-'+rowKey);
   document.getElementById('badge-'+rowKey).textContent = `${leads.length} לידים`;
-  const rows = [...new Set(leads.map(l=>l[rowKey]).filter(Boolean))].sort();
-  const cols = [...new Set(leads.map(l=>l[colKey]).filter(Boolean))].sort();
+  const rows = ALL_OPTIONS[rowKey]?.length
+    ? ALL_OPTIONS[rowKey]
+    : [...new Set(leads.map(l=>l[rowKey]).filter(Boolean))].sort();
+  const cols = ALL_OPTIONS[colKey]?.length
+    ? ALL_OPTIONS[colKey]
+    : [...new Set(leads.map(l=>l[colKey]).filter(Boolean))].sort();
   if (!leads.length) {
     tbl.querySelector('thead').innerHTML='';
     tbl.querySelector('tbody').innerHTML=`<tr><td colspan="3"><div class="state-msg"><span class="icon">📭</span>אין נתונים</div></td></tr>`;
